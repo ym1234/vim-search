@@ -93,3 +93,5 @@ map     <expr>    <plug>(my_search_nohl_and_blink)    search#nohl_and_blink()
 cno               <plug>(my_search_cr)                <cr>
 noremap           <plug>(my_search_prev)              <c-o>
 noremap <expr>    <plug>(my_search_blink)             search#blink(2, 50)
+
+nno    <expr>     <plug>(my_search_echo_msg)          search#echo_msg()

@@ -183,9 +183,37 @@ fu! search#wrap(seq) abort
         return a:seq
     endif
 
+    let s:seq = a:seq
     sil! au! my_search | aug! my_search
     set hlsearch
-    return a:seq."\<plug>(my_search_nohl_and_blink)"
+    return a:seq."\<plug>(my_search_nohl_and_blink)\<plug>(my_search_echo_msg)"
+endfu
+
+"}}}
+" echo_msg "{{{
+
+fu! search#echo_msg() abort
+    if s:seq ==? 'n'
+        let seq = (s:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
+
+        let winview     = winsaveview()
+        let [line, col] = [winview.lnum, winview.col]
+
+        call cursor(1, 1)
+        let [idx, total]          = [1, 0]
+        let [matchline, matchcol] = searchpos(@/, 'cW')
+        while matchline && total <= 999
+            let total += 1
+            if matchline < line || (matchline == line && matchcol <= col)
+                let idx += 1
+            endif
+            let [matchline, matchcol] = searchpos(@/, 'W')
+        endwhile
+
+        echo @/.'('.idx.'/'.total.')'
+    endif
+
+    return ''
 endfu
 
 "}}}
