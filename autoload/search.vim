@@ -182,11 +182,33 @@ fu! search#wrap(seq) abort
     if mode() ==# 'c' && getcmdtype() !~# '[/?]'
         return a:seq
     endif
+    " we store the key inside `s:seq` so that `echo_msg()` knows whether it must
+    " echo a msg or not
 
     let s:seq = a:seq
+
+    " FIXME:
+    " how to get `n` `N` to move consistently no matter the direction of the
+    " search `/`, or `?` ?
+    " If we change the value of `s:seq` (`n` to `N` or `N` to `n`), we have an error:
+    "     too recursive mapping
+    " Why?
+    "
+    " if a:seq ==? 'n'
+    "     " toggle the value of `n`, `N`
+    "     let s:seq = (a:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
+    "     " convert it into a non-recursive mapping to avoid error "too recursive mapping"
+    "     " Pb: when we use non-recursive mapping, we don't see the message anymore
+    "     " Maybe because the non-recursive mapping is expanded after the
+    "     message has been displayed ?
+    "     let s:seq = (s:seq ==# 'n' ? "\<plug>(my_search_n)" : "\<plug>(my_search_N)")
+    " else
+    "     let s:seq = a:seq
+    " endif
+
     sil! au! my_search | aug! my_search
     set hlsearch
-    return a:seq."\<plug>(my_search_nohl_and_blink)\<plug>(my_search_echo_msg)"
+    return s:seq."\<plug>(my_search_nohl_and_blink)\<plug>(my_search_echo_msg)"
 endfu
 
 "}}}
@@ -194,7 +216,6 @@ endfu
 
 fu! search#echo_msg() abort
     if s:seq ==? 'n'
-        let seq = (s:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
 
         let winview     = winsaveview()
         let [line, col] = [winview.lnum, winview.col]
@@ -217,3 +238,6 @@ fu! search#echo_msg() abort
 endfu
 
 "}}}
+
+" nno <plug>(my_search_n) n
+" nno <plug>(my_search_N) N
