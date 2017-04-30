@@ -1,3 +1,12 @@
+" FIXME:
+"
+" Implement caching taking inspiration from:
+"
+"     https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
+
+" FIXME:
+" Sometimes, the blinking doesn't work. Need to restart Vim.
+
 " blink "{{{
 
 fu! search#blink(times, delay) abort
@@ -140,7 +149,7 @@ fu! search#nohl_and_blink() abort
     " … to compute the number of times we have to hit `C-e` or `C-y` to
     " position the current line in the window, so that the state of the window
     " is restored as it was before we hit `*`.
-    "
+
 "}}}
 
     if exists('s:winline')
@@ -190,21 +199,29 @@ fu! search#wrap(seq) abort
     " FIXME:
     " how to get `n` `N` to move consistently no matter the direction of the
     " search `/`, or `?` ?
-    " If we change the value of `s:seq` (`n` to `N` or `N` to `n`), we have an error:
-    "     too recursive mapping
-    " Why?
+    " If we change the value of `s:seq` (`n` to `N` or `N` to `n`), when we perform
+    " a backward search we have an error:
     "
-    " if a:seq ==? 'n'
-    "     " toggle the value of `n`, `N`
-    "     let s:seq = (a:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
-    "     " convert it into a non-recursive mapping to avoid error "too recursive mapping"
-    "     " Pb: when we use non-recursive mapping, we don't see the message anymore
-    "     " Maybe because the non-recursive mapping is expanded after the
-    "     message has been displayed ?
-    "     let s:seq = (s:seq ==# 'n' ? "\<plug>(my_search_n)" : "\<plug>(my_search_N)")
-    " else
-    "     let s:seq = a:seq
-    " endif
+    "         too recursive mapping
+    "
+    " Why?
+
+    if a:seq ==? 'n'
+        " toggle the value of `n`, `N`
+        let s:seq = (a:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
+        " " convert it into a non-recursive mapping to avoid error "too recursive mapping"
+        " " Pb: when we use non-recursive mapping, we don't see the message anymore
+        " " Maybe because the non-recursive mapping is expanded after the
+        " " message has been displayed ?
+        "
+        " let s:seq = (s:seq ==# 'n' ? "\<plug>(my_search_n)" : "\<plug>(my_search_N)")
+        "
+        " Move mappings outside function:
+        " nno <plug>(my_search_n) n
+        " nno <plug>(my_search_N) N
+    else
+        let s:seq = a:seq
+    endif
 
     sil! au! my_search | aug! my_search
     set hlsearch
@@ -238,6 +255,3 @@ fu! search#echo_msg() abort
 endfu
 
 "}}}
-
-" nno <plug>(my_search_n) n
-" nno <plug>(my_search_N) N
