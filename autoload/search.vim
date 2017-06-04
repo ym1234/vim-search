@@ -188,7 +188,23 @@ endfu
 " wrap "{{{
 
 fu! search#wrap(seq) abort
-    if mode() ==# 'c' && getcmdtype() !~# '[/?]'
+    if mode() ==# 'c' && getcmdtype() ==# ':' && a:seq ==# "\<cr>" && getcmdline() =~ '#\s*$'
+        " If we're on the Ex command line, it ends with a number sign, and we
+        " hit Enter, return the Enter key, and add a colon at the end of it.
+        "
+        " Why?
+        " Because `:#` is a command used to print lines with their addresses:
+        "     :g/pattern/#
+        "
+        " And, when it's executed, we probably want to jump to one of them, by
+        " typing its address on the command line:
+        "     https://gist.github.com/romainl/047aca21e338df7ccf771f96858edb86
+
+        return "\<cr>:"
+
+    elseif mode() ==# 'c' && getcmdtype() !~# '[/?]'
+        " if we're not on the search command line, just return the key sequence
+        " without any modification
         return a:seq
     endif
     " we store the key inside `s:seq` so that `echo_msg()` knows whether it must
@@ -225,6 +241,7 @@ fu! search#wrap(seq) abort
 
     sil! au! my_search | aug! my_search
     set hlsearch
+
     return s:seq."\<plug>(my_search_nohl_and_blink)\<plug>(my_search_echo_msg)"
 endfu
 
