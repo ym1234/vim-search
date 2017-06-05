@@ -218,31 +218,29 @@ fu! search#wrap(seq) abort
         return "\<cr>:b "
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*il%[ist]\s+'
+                \ && l:line =~# '\v\C^\s*%(d|i)l%[ist]\s+'
 
-        return "\<cr>:ij "
-
-    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*dl%[ist]\s+'
-
-        return "\<cr>:dj "
+        return "\<cr>:".matchstr(l:line, '\S').'j '
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*cl%[ist]\s*$'
+                \ && l:line =~# '\v\C^\s*%(c|l)li%[st]\s*$'
 
         " allow Vim's pager to display the full contents of any command,
         " even if it takes more than one screen; don't stop after the first
         " screen to display the message:    -- More --
         set nomore
+
+        " reset 'more' after the keys have been typed
         call timer_start(10, s:snr().'reset_more')
-        return "\<cr>:cc "
+
+        return "\<cr>:".repeat(matchstr(l:line, '\S'), 2).' '
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*lli%[st]\s*$'
+                \ && l:line =~# '\v\C^\s*%(c|l)hi%[story]\s*$'
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
-        return "\<cr>:ll "
+        return "\<cr>:sil".matchstr(l:line, '\S').'older '
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*old%[files]\s*$'
