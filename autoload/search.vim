@@ -198,6 +198,7 @@ endfu
 fu! search#wrap(seq) abort
     let [ l:line, l:mode, l:type ] = [ getcmdline(), mode(), getcmdtype() ]
 
+    " g//#
     if l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>" && l:line =~# '#\s*$'
         " If we're on the Ex command line, it ends with a number sign, and we
         " hit Enter, return the Enter key, and add a colon at the end of it.
@@ -212,16 +213,19 @@ fu! search#wrap(seq) abort
 
         return "\<cr>:"
 
+    " ls
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*%(ls|buffers|files)\s*$'
 
         return "\<cr>:b "
 
+    " ilist
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*%(d|i)l%[ist]\s+'
 
         return "\<cr>:".matchstr(l:line, '\S').'j '
 
+    " clist
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*%(c|l)li%[st]\s*$'
 
@@ -235,6 +239,7 @@ fu! search#wrap(seq) abort
 
         return "\<cr>:".repeat(matchstr(l:line, '\S'), 2).' '
 
+    " chistory
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*%(c|l)hi%[story]\s*$'
 
@@ -242,6 +247,7 @@ fu! search#wrap(seq) abort
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:sil ".matchstr(l:line, '\S').'older '
 
+    " oldfiles
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*old%[files]\s*$'
 
@@ -249,6 +255,7 @@ fu! search#wrap(seq) abort
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:e #<"
 
+    " changes
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*changes\s*$'
 
@@ -261,6 +268,7 @@ fu! search#wrap(seq) abort
         call feedkeys("\<cr>:norm! g;\<s-left>", 'in')
         return ''
 
+    " jumps
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*ju%[mps]\s*$'
 
@@ -271,6 +279,7 @@ fu! search#wrap(seq) abort
 "                                                      └─ don't remap C-o and S-left
         return ''
 
+    " marks
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*marks\s*$'
 
@@ -278,16 +287,9 @@ fu! search#wrap(seq) abort
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:norm! `"
 
-    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*undol%[ist]\s*$'
-
-        set nomore
-        call timer_start(10, s:snr().'reset_more')
-        return "\<cr>:u "
-
+    " if we're not on the search command line, just return the key sequence
+    " without any modification
     elseif l:mode ==# 'c' && l:type !~# '[/?]'
-        " if we're not on the search command line, just return the key sequence
-        " without any modification
         return a:seq
     endif
 
