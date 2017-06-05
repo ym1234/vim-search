@@ -188,7 +188,9 @@ endfu
 " wrap "{{{
 
 fu! search#wrap(seq) abort
-    if mode() ==# 'c' && getcmdtype() ==# ':' && a:seq ==# "\<cr>" && getcmdline() =~ '#\s*$'
+    let [ l:line, l:mode, l:type ] = [ getcmdline(), mode(), getcmdtype() ]
+
+    if l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>" && l:line =~# '#\s*$'
         " If we're on the Ex command line, it ends with a number sign, and we
         " hit Enter, return the Enter key, and add a colon at the end of it.
         "
@@ -202,7 +204,69 @@ fu! search#wrap(seq) abort
 
         return "\<cr>:"
 
-    elseif mode() ==# 'c' && getcmdtype() !~# '[/?]'
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*%(ls|buffers|files)\s*$'
+
+        return "\<cr>:b "
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*il%[ist]\s+'
+
+        return "\<cr>:ij "
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*dl%[ist]\s+'
+
+        return "\<cr>:dj "
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*cl%[ist]\s*$'
+
+        " allow Vim's pager to display the full contents of any command,
+        " even if it takes more than one screen; don't stop at the first
+        " screen to display:    -- More --
+        set nomore
+        return "\<cr>:sil se more|cc "
+"                     │
+"                     └─ re-enable the `more` option
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*lli%[st]\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|ll "
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*old%[files]\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|e #<"
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*changes\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|norm! g;\<s-left>"
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*ju%[mps]\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|exe \"norm! \\\<lt>c-o>\"\<s-left>"
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*marks\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|norm! `"
+
+    elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
+                \ && l:line =~# '\v\C^\s*undol%[ist]\s*$'
+
+        set nomore
+        return "\<cr>:sil se more|u "
+
+    elseif l:mode ==# 'c' && l:type !~# '[/?]'
         " if we're not on the search command line, just return the key sequence
         " without any modification
         return a:seq
