@@ -187,6 +187,14 @@ endfu
 " `wrap()` enables 'hlsearch' then calls `nohl_and_blink()`
 " wrap "{{{
 
+fu! s:snr()
+    return matchstr(expand('<sfile>'), '<SNR>\d\+_')
+endfu
+
+fu! s:reset_more(...)
+    set more
+endfu
+
 fu! search#wrap(seq) abort
     let [ l:line, l:mode, l:type ] = [ getcmdline(), mode(), getcmdtype() ]
 
@@ -223,57 +231,70 @@ fu! search#wrap(seq) abort
                 \ && l:line =~# '\v\C^\s*cl%[ist]\s*$'
 
         " allow Vim's pager to display the full contents of any command,
-        " even if it takes more than one screen; don't stop at the first
-        " screen to display:    -- More --
+        " even if it takes more than one screen; don't stop after the first
+        " screen to display the message:    -- More --
         set nomore
-        return "\<cr>:sil se more|cc "
-"                     │
-"                     └─ re-enable the `more` option
+        call timer_start(10, s:snr().'reset_more')
+        return "\<cr>:cc "
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*lli%[st]\s*$'
 
         set nomore
-        return "\<cr>:sil se more|ll "
+        call timer_start(10, s:snr().'reset_more')
+        return "\<cr>:ll "
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*old%[files]\s*$'
 
         set nomore
-        return "\<cr>:sil se more|e #<"
+        call timer_start(10, s:snr().'reset_more')
+        return "\<cr>:e #<"
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*changes\s*$'
 
         set nomore
-        return "\<cr>:sil se more|norm! g;\<s-left>"
+        call timer_start(10, s:snr().'reset_more')
+        " We don't return the keys directly, because S-left could be remapped
+        " to something else, leading to spurious bugs.
+        " We need to tell Vim to not remap it. We can't do that with `:return`.
+        " But we can do it with `feedkeys()` and the `n` flag.
+        call feedkeys("\<cr>:norm! g;\<s-left>", 'in')
+        return ''
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*ju%[mps]\s*$'
 
         set nomore
-        return "\<cr>:sil se more|exe \"norm! \\\<lt>c-o>\"\<s-left>"
+        call timer_start(10, s:snr().'reset_more')
+        call feedkeys("\<cr>:norm! \<c-o>\<s-left>", 'in')
+"                                                      │
+"                                                      └─ don't remap C-o and S-left
+        return ''
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*marks\s*$'
 
         set nomore
-        return "\<cr>:sil se more|norm! `"
+        call timer_start(10, s:snr().'reset_more')
+        return "\<cr>:norm! `"
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*undol%[ist]\s*$'
 
         set nomore
-        return "\<cr>:sil se more|u "
+        call timer_start(10, s:snr().'reset_more')
+        return "\<cr>:u "
 
     elseif l:mode ==# 'c' && l:type !~# '[/?]'
         " if we're not on the search command line, just return the key sequence
         " without any modification
         return a:seq
     endif
+
     " we store the key inside `s:seq` so that `echo_msg()` knows whether it must
     " echo a msg or not
-
     let s:seq = a:seq
 
     " FIXME:
