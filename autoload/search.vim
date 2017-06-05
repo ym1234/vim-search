@@ -240,7 +240,7 @@ fu! search#wrap(seq) abort
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
-        return "\<cr>:sil".matchstr(l:line, '\S').'older '
+        return "\<cr>:sil ".matchstr(l:line, '\S').'older '
 
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
                 \ && l:line =~# '\v\C^\s*old%[files]\s*$'
