@@ -227,7 +227,7 @@ fu! search#wrap(seq) abort
 
     " clist
     elseif l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>"
-                \ && l:line =~# '\v\C^\s*%(c|l)li%[st]\s*$'
+                \ && l:line =~# '\v\C^\s*%(c|l)l%[ist]\s*$'
 
         " allow Vim's pager to display the full contents of any command,
         " even if it takes more than one screen; don't stop after the first
