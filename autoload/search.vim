@@ -317,7 +317,7 @@ fu! search#wrap(seq) abort
         "
         " let s:seq = (s:seq ==# 'n' ? "\<plug>(my_search_n)" : "\<plug>(my_search_N)")
         "
-        " Move mappings outside function:
+        " " Move mappings outside function:
         " nno <plug>(my_search_n) n
         " nno <plug>(my_search_N) N
     else
