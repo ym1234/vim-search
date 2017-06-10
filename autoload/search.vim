@@ -199,7 +199,7 @@ fu! search#wrap(seq) abort
     let [ l:line, l:mode, l:type ] = [ getcmdline(), mode(), getcmdtype() ]
 
     " g//#
-    if l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>" && l:line =~# '#\s*$'
+    if l:mode ==# 'c' && l:type ==# ':' && a:seq ==# "\<cr>" && l:line =~# '^g.*#$'
         " If we're on the Ex command line, it ends with a number sign, and we
         " hit Enter, return the Enter key, and add a colon at the end of it.
         "
