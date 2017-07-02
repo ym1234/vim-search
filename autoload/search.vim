@@ -200,7 +200,7 @@ endfu
 
 fu! search#immobile(seq) abort
     let s:winline = winline()
-    return a:seq."\<plug>(my_search_prev)"
+    return a:seq."\<plug>(ms_prev)"
 endfu
 
 "}}}
@@ -234,7 +234,7 @@ fu! search#nohl_and_blink() abort
     " expression. During the evaluation, `search#immobile()` is called, which set
     " the variable `s:winline`. The result of the evaluation is:
     "
-    "     <plug>(my_search_nohl_and_blink)*<plug>(my_search_prev)
+    "     <plug>(ms_nohl_and_blink)*<plug>(ms_prev)
     "
     " … which is equivalent to:
     "
@@ -269,7 +269,7 @@ fu! search#nohl_and_blink() abort
                  \     : ''
     endif
 
-    return seq."\<plug>(my_search_blink)"
+    return seq."\<plug>(ms_blink)"
 endfu
 
 "}}}
@@ -328,11 +328,11 @@ fu! search#wrap(seq) abort
         " " Maybe because the non-recursive mapping is expanded after the
         " " message has been displayed ?
         "
-        " let s:seq = (s:seq ==# 'n' ? "\<plug>(my_search_n)" : "\<plug>(my_search_N)")
+        " let s:seq = (s:seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
         "
         " " Move mappings outside function:
-        " nno <plug>(my_search_n) n
-        " nno <plug>(my_search_N) N
+        " nno <plug>(ms_n) n
+        " nno <plug>(ms_N) N
     else
         let s:seq = a:seq
     endif
@@ -340,7 +340,7 @@ fu! search#wrap(seq) abort
     sil! au! my_search | aug! my_search
     set hlsearch
 
-    return s:seq."\<plug>(my_search_nohl_and_blink)\<plug>(my_search_echo_msg)"
+    return s:seq."\<plug>(ms_nohl_and_blink)\<plug>(ms_echo_msg)"
 endfu
 
 "}}}

@@ -2,14 +2,6 @@
 " Search highlight is not cleared when there is no match
 " https://github.com/junegunn/vim-slash/issues/5
 
-" FIXME:
-" Why do we remove the autocmd, if we re-install right after?
-" I think it's because the autocmd shouldn't be fired for a `n` motion.
-" Only for other motions.
-" It would mean that the autocmd is temporarily disabled between the time
-" where the `n` motion occurs, and the moment the processing of the mapping is
-" finished. Weird.
-"
 " NOTE:
 " Why doesn't our `n` mapping raise the error “too recursive mapping“?
 " From `:h recursive_mapping`:
@@ -30,16 +22,27 @@
 
 " n →    wrap('n')
 "
-"   →    remove autocmd  (if we don't remove, the hl stays off when we hit `n`)
+"   →    remove autocmd (!)
 "        set hlsearch
-"        n <plug>(my_search_nohl_and_blink)
+"        n <plug>(ms_nohl_and_blink)
 "
 "   →    n search#nohl_and_blink()
 "
 "   →    autocmd `set nohls` when cursor moves
-"        n <plug>(my_search_blink)
+"        n <plug>(ms_blink)
 "
 "   →    n search#blink()
+
+" (!) Why do we remove the autocmd even though we re-install it right after?
+" When we perform a search:
+"
+"     /pattern
+"
+" … we hit `CR` which has been remapped to the output of `search#wrap()`.
+" At the end of the evaluation of this function, an autocmd is installed to
+" remove the hl as soon as the cursor moves.
+" If we don't remove the autocmd, then, when we'll hit `n`, the cursor will
+" move and the hl will be removed.
 
 " map = `nvo`
 map  <expr> n    search#wrap('n')
@@ -56,14 +59,14 @@ cmap <expr> <cr> search#wrap("\<cr>")
 "
 "     c/pattern
 "
-" … inserts `<Plug>(my_search_nohl_and_blink)`
+" … inserts `<Plug>(ms_nohl_and_blink)`
 
-imap <expr>   <plug>(my_search_nohl_and_blink)   search#nohl_and_blink_on_leave()
+imap <expr>   <plug>(ms_nohl_and_blink)   search#nohl_and_blink_on_leave()
 
 " FIXME:
-" When disabling `<plug>(my_search_prev)` is necessary?
+" When disabling `<plug>(ms_prev)` is necessary?
 
-ino           <plug>(my_search_prev)      <nop>
+ino           <plug>(ms_prev)      <nop>
 
 " NOTE:
 "
@@ -78,8 +81,8 @@ ino           <plug>(my_search_prev)      <nop>
 
 map  <expr> *    search#wrap(search#immobile('*'))
 "                  │         │
-"                  │         └─ *<plug>(my_search_prev)
-"                  └─ <plug>(my_search_nohl_and_blink)*<plug>(my_search_prev)
+"                  │         └─ *<plug>(ms_prev)
+"                  └─ <plug>(ms_nohl_and_blink)*<plug>(ms_prev)
 
 map  <expr> #    search#wrap(search#immobile('#'))
 map  <expr> g*   search#wrap(search#immobile('g*'))
@@ -98,8 +101,8 @@ map  <expr> g#   search#wrap(search#immobile('g#'))
 " backward, then `/` is not special, but `?` is.
 " That's why we pass a numerical argument to it (0 or 1). It stands for the direction.
 
-xmap <expr> *    search#wrap(search#immobile("y/\<c-r>=search#escape(0)\<plug>(my_search_cr)\<plug>(my_search_cr)"))
-xmap <expr> #    search#wrap(search#immobile("y?\<c-r>=search#escape(1)\<plug>(my_search_cr)\<plug>(my_search_cr)"))
+xmap <expr> *    search#wrap(search#immobile("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)"))
+xmap <expr> #    search#wrap(search#immobile("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)"))
 
 " Breaking down:
 "
@@ -114,10 +117,10 @@ xmap <expr> #    search#wrap(search#immobile("y?\<c-r>=search#escape(1)\<plug>(m
 "     └─ copy visual selection
 
 
-map     <expr>    <plug>(my_search_nohl_and_blink)    search#nohl_and_blink()
-cno               <plug>(my_search_cr)                <cr>
+map     <expr>    <plug>(ms_nohl_and_blink)    search#nohl_and_blink()
+cno               <plug>(ms_cr)                <cr>
 " noremap = `nvo`
-noremap           <plug>(my_search_prev)              <c-o>
-noremap <expr>    <plug>(my_search_blink)             search#blink()
+noremap           <plug>(ms_prev)              <c-o>
+noremap <expr>    <plug>(ms_blink)             search#blink()
 
-nno    <expr>     <plug>(my_search_echo_msg)          search#echo_msg()
+nno    <expr>     <plug>(ms_echo_msg)          search#echo_msg()
