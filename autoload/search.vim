@@ -1,17 +1,31 @@
-" FIXME:
-"
-" Implement caching taking inspiration from:
-"
-"     https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
-"
-" FIXME:
-" the cursor jumps briefly onto the command line when we hit `n`
-
 " blink "{{{
 
 " `s:blink` must be initialized before defining the functions
 " `s:blink.tick()` and `s:blink.clear()`.
 let s:blink = { 'ticks': 5, 'delay': 50 }
+
+" What does `blink.tick()` do? "{{{
+"
+" When the initial number of ticks is even, `blink.tick()` cycles between
+" installing and removing the highlighting:
+"
+" ticks = 4
+"         3 → install hl
+"         2 → remove hl (when evaluating `self.delete()`)
+"         1 → install hl
+"         0 → remove hl
+"
+" Same thing when the number of ticks is odd, except at the end, when `ticks = 0`,
+" it doesn't install the hl, because it's not active anymore:
+"
+" ticks = 5
+"         4 → install hl
+"         3 → remove hl
+"         2 → install hl
+"         1 → remove hl
+"         0 → don't do anything because inactive
+"
+"}}}
 
 "                ┌─ when `timer_start()` will call this function, it will send
 "                │  the timer ID
@@ -21,10 +35,62 @@ fu! s:blink.tick(_) abort
 
     let active = self.ticks > 0
 
-    " FIXME:
-    " Don't understand this line:
+    " What does the next condition do? "{{{
+    "
+    " PART1:
+    " We need the blinking to stop and not go on forever.
+    " 2 solutions:
+    "
+    "     1. use the 'repeat' option of the `timer_start()` function:
+    "
+    "         call timer_start(self.delay, self.tick, { 'repeat' : 6 })
+    "
+    "     2. decrement a counter every time `blink.tick()` is called
+    "
+    " We'll use the 2nd solution, because by adding the counter to the
+    " dictionary `s:blink`, we have a single object which includes the whole
+    " configuration of the blinking:
+    "
+    "     - how does it blink?                           s:blink.tick
+    "     - how many times does it blink?                s:blink.ticks
+    "     - how much time does it wait between 2 ticks?  s:blink.delay
+    "
+    " It gives us a consistent way to change the configuration of the blinking.
+    "
+    " This explains the `if active` part of the next condition.
+    "
+    " PART2:
+    " If we move the cursor right after the blinking has begun, we don't want
+    " the blinking to go on, because it would follow our cursor (look at the
+    " pattern passed to `matchadd()`). Although the effect is only visible if
+    " the delay between 2 ticks is big enough (ex: 500 ms).
+    "
+    " We need to stop the blinking if the cursor moves.
+    " How to detect that the cursor is moving?
+    " We already have an autocmd listening to the `CursorMoved` event.
+    " When our autocmd is fired, 'hlsearch' is disabled.
+    " So, if 'hlsearch' is disabled, we should stop the blinking.
+    "
+    " This explains the `if &hls` part of the next condition.
+    "
+    " PART3:
+    "
+    " For a blinking to occur, we need a condition which is satisfied only once
+    " out of twice.
+    " We could use the output of `blink.delete()` to know whether a hl has
+    " just been deleted. And in this case, we could decide to NOT re-install
+    " a hl immediately. Otherwise, re-install one.
+    "
+    " This explains the `if !self.delete()` part of the next condition.
+"}}}
+
+    "  (re-)install the hl if:
+    "
+    "  ┌─ you haven't just deleted it
+    "  │                 ┌─ the blinking is still active
+    "  │                 │         ┌─ the cursor hasn't moved
+    "  │                 │         │
     if !self.clear() && &hlsearch && active
-    " `!self.clear()` is true iff `w:blink_id` doesn't exist.
 
         " '\v%%%dl%%>%dc%%<%dc'
         "    │    │     │
@@ -42,6 +108,7 @@ fu! s:blink.tick(_) abort
                        \         )
     endif
 
+    " if the blinking still has ticks to process, recall this function later
     if active
         " call `s:blink.tick()` (current function) after `s:blink.delay` ms
         call timer_start(self.delay, self.tick)
@@ -59,7 +126,7 @@ fu! s:blink.clear() abort
         unlet w:blink_id
         return 1
     endif
-    " A function returns 0 by default, so no need to write `return 0`.
+    " no need to return 0, that's what a function does by default
 endfu
 
 fu! search#blink() abort
@@ -73,9 +140,9 @@ fu! search#blink() abort
 endfu
 
 "}}}
-" cr "{{{
+" cr_ex "{{{
 
-fu! s:cr(line) abort
+fu! s:cr_ex(line) abort
     " g//#
     if a:line =~# '^g.*#$'
         " If we're on the Ex command line, it ends with a number sign, and we
@@ -158,67 +225,161 @@ fu! s:cr(line) abort
         return "\<cr>:norm! `"
 
     else
+        " there's no infinite remapping (`:h recursive_mapping`):
+        "
+        "         If the {rhs} starts with {lhs}, the first character is not
+        "         mapped again.
         return "\<cr>"
     endif
-endfu
-
-"}}}
-" echo_msg "{{{
-
-fu! search#echo_msg() abort
-    if s:seq ==? 'n'
-
-        let winview     = winsaveview()
-        let [line, col] = [winview.lnum, winview.col]
-
-        call cursor(1, 1)
-        let [idx, total]          = [1, 0]
-        let [matchline, matchcol] = searchpos(@/, 'cW')
-        while matchline && total <= 999
-            let total += 1
-            if matchline < line || (matchline == line && matchcol <= col)
-                let idx += 1
-            endif
-            let [matchline, matchcol] = searchpos(@/, 'W')
-        endwhile
-
-        echo @/.'('.idx.'/'.total.')'
-    endif
-
-    return ''
 endfu
 
 "}}}
 " escape "{{{
 
 fu! search#escape(backward) abort
-    return '\V'.substitute(escape(@", '\' . (a:backward ? '?' : '/')), "\n", '\\n', 'g')
+    return '\V'.substitute(escape(@", '\'.(a:backward ? '?' : '/')), "\n", '\\n', 'g')
 endfu
 
 "}}}
-" immobile "{{{
+" matches_above "{{{
 
-fu! search#immobile(seq) abort
-    let s:winline = winline()
-    return a:seq."\<plug>(ms_prev)"
-endfu
-
-"}}}
-" nohl_and_blink "{{{
-
-" `nohl_and_blink()` does 4 things:
+" Efficiently recalculate number of matches above current line using values
+" cached from the previous run.
 "
-"     1. install a fire-once autocmd to disable 'hlsearch' as soon as we move the cursor
-"     2. open possible folds
-"     3. restore the position of the window
-"     4. make the cursor blink
+" How it works? ; if the current position is near:
+"
+"     the end, it's faster to compute the number of matches from the current
+"     line to the end, then subtract it from the total (the function is only
+"     invoked if the buffer hasn't changed, so `total` is the same as the last time)
+"
+"     the position where we were last time we computed the number of matches above,
+"     it's faster to compute the number of matches between the 2 positions, then
+"     add/subtract it from the cached number of matches above the old position
 
-fu! search#nohl_and_blink() abort
-    augroup my_search
-        au!
-        au CursorMoved,CursorMovedI * set nohlsearch | au! my_search | aug! my_search
-    augroup END
+fu! s:matches_above()
+    " if we're at the beginning of the buffer, there can't be anything above
+    "
+    " it probably also prevents the range `1,.-1` = `1,0` from prompting us with:
+    "
+    "     Backwards range given, OK to swap (y/n)?
+    if line('.') == 1 | return 0 | endif
 
+    " this function is called only if `b:changedtick` hasn't changed, so
+    " even though the position of the cursor may have changed, `total` can't
+    " have changed
+    let [ old_line, old_before, total ] = b:ms_cache
+
+    let line = line('.')
+    " find the nearest point from which we can restart counting:
+    "         top, bottom, or previously cached line
+    let to_top    = line
+    let to_old    = abs(line - old_line)
+    let to_bottom = line('$') - line
+    let min_dist  = min([ to_top, to_old, to_bottom ])
+
+    if min_dist == to_top
+        return s:matches_in_range('1,.-1')
+
+    elseif min_dist == to_bottom
+        return total - s:matches_in_range('.,$')
+
+    " otherwise, min_dist == to_old, we just need to check relative line order
+    elseif old_line < line
+        return old_before + s:matches_in_range(old_line.',.-1')
+        "                   │
+        "                   └─ number of matches between old position and
+        "                   above current one
+
+    elseif old_line > line
+        return old_before - s:matches_in_range('.,'.old_line.'-1')
+        "                   │
+        "                   └─ number of matches between current position and
+        "                   above last one
+
+    else " old_line == line
+        return old_before
+    endif
+endfu
+
+"}}}
+" matches_count "{{{
+
+" Return 2-element array, containing current index and total number of matches
+" of last search pattern in the current buffer.
+fu! s:matches_count() abort
+    let view = winsaveview()
+    " folds affect range of ex commands
+    " https://stackoverflow.com/q/33190754/8243465
+    let fen_save = &l:fen
+    setl nofoldenable
+
+    " we must compute the number of matches on the current line NOW
+    " afterwards, when `s:matches_above()` or `s:matches_in_range()` is
+    " invoked, we'll be somewhere else
+    let in_line = s:matches_in_line()
+
+    " the cache we have stored in `b:ms_cache` is only useful if neither the
+    " pattern nor the buffer has changed
+    let cache_id = [ @/, b:changedtick ]
+    if get(b:, 'ms_cache_id', []) ==# cache_id
+        let before = s:matches_above()
+        let total  = b:ms_cache[-1]
+    else
+        " if the cache can't be used, recompute
+        let before = line('.') == 1 ? 0 : s:matches_in_range('1,.-1')
+        let total  = before + s:matches_in_range('.,$')
+    endif
+
+    let b:ms_cache    = [ line('.'), before, total ]
+    let b:ms_cache_id = cache_id
+
+    let &l:fen = fen_save
+    call winrestview(view)
+
+    return [ before + in_line, total ]
+endfu
+
+"}}}
+" matches_in_line "{{{
+
+" Return number of matches before the cursor, on the current line.
+fu! s:matches_in_line() abort
+    let [ line, col ] = [ line('.'), col('.') ]
+
+    norm! 0
+    let matches = 0
+    let flag    = 'c'
+    while search(@/, flag, line) && col('.') <= col
+        let matches += 1
+        let flag     = ''
+    endwhile
+
+    return matches
+endfu
+
+"}}}
+" matches_in_range "{{{
+
+fu! s:matches_in_range(range) abort
+    let output = execute(a:range.'s///gen')
+    return str2nr(matchstr(output, '\d\+'))
+endfu
+
+"}}}
+" matches_print "{{{
+
+fu! search#matches_print() abort
+    let [current, total] = s:matches_count()
+    echo @/.' ['.current.'/'.total.']'
+endfu
+
+"}}}
+" nice_view "{{{
+
+" make us a nice view, by opening folds if any, and by restoring the view if
+" it changed but we wanted to stay where we are (happens with `*` and friends)
+
+fu! search#nice_view() abort
     let seq = foldclosed('.') != -1 ? 'zMzv' : ''
 
     " What are `s:winline` and `s:windiff`? "{{{
@@ -228,20 +389,19 @@ fu! search#nohl_and_blink() abort
     " NOTE:
     "
     " The goal of `s:windiff` is to restore the state of the window after we
-    " search with `*` and similar normal commands (`#`, `g*`, `g#`).
+    " search with `*` and friends.
     "
-    " When we hit `*`, the `{rhs}` of the `*` mapping is evaluated as an
-    " expression. During the evaluation, `search#immobile()` is called, which set
-    " the variable `s:winline`. The result of the evaluation is:
+    " When we hit `*`, the rhs is evaluated the output of `search#wrap_star()`.
+    " During the evaluation, the variable `s:winline` is set.
+    " The result of the evaluation is (broken on 3 lines to make it more
+    " readable):
     "
-    "     <plug>(ms_nohl_and_blink)*<plug>(ms_prev)
+    "     *<plug>(ms_prev)
+    "      <plug>(ms_slash)<up><plug>(ms_cr)<plug>(ms_prev)
+    "      <plug>(ms_set_nohls)<plug>(ms_nice_view)<plug>(ms_blink)<plug>(ms_index)
     "
-    " … which is equivalent to:
-    "
-    "     :call <sid>nohl_and_blink_on_leave()<CR>*<C-o>
-    "
-    " What's important to understand here, is that `nohl_and_blink()` is
-    " called AFTER `search#immobile()`. Therefore, `s:winline` is not necessarily
+    " What's important to understand here, is that `nice_view()` is called AFTER
+    " `search#wrap_star()`. Therefore, `s:winline` is not necessarily
     " the same as the current output of `winline()`, and we can use:
     "
     "     winline() - s:winline
@@ -250,7 +410,7 @@ fu! search#nohl_and_blink() abort
     " position the current line in the window, so that the state of the window
     " is restored as it was before we hit `*`.
 
-"}}}
+    "}}}
 
     if exists('s:winline')
         let windiff = winline() - s:winline
@@ -260,27 +420,21 @@ fu! search#nohl_and_blink() abort
         " from the top line of the window, than it was originally.
         " We have to move the window down to restore the original distance
         " between current line and top line.
-        " Thus, we use `C-e`. Otherwise, we use `C-y`.
+        " Thus, we use `C-e`. Otherwise, we use `C-y`. Each time we must
+        " prefix the key with the right count (± `windiff`).
+
+        " However, we can't return the keys directly, because we've remapped
+        " `C-e` and `C-y` to scroll faster than originally.
+        " We must use non-recursive `<plug>(…)` mappings.
 
         let seq .= windiff > 0
-                 \   ? windiff."\<c-e>"
-                 \   : windiff < 0
-                 \     ? -windiff."\<c-y>"
-                 \     : ''
+                \   ? windiff."\<plug>(ms_c_e)"
+                \   : windiff < 0
+                \     ? -windiff."\<plug>(ms_c_y)"
+                \     : ''
     endif
 
-    return seq."\<plug>(ms_blink)"
-endfu
-
-"}}}
-" nohl_and_blink_on_leave "{{{
-
-fu! search#nohl_and_blink_on_leave()
-    augroup my_search
-        au!
-        au InsertLeave * call search#nohl_and_blink() | au! my_search | aug! my_search
-    augroup END
-    return ''
+    return seq
 endfu
 
 "}}}
@@ -291,6 +445,50 @@ fu! s:reset_more(...)
 endfu
 
 "}}}
+" set_hls "{{{
+
+fu! s:set_hls() abort
+    " If we don't remove the autocmd, when `n` will be typed, the cursor will
+    " move, and 'hls' will be disabled. We want 'hls' to stay enabled even
+    " after the `n` motion. Same issue with the motion after a `/` search (not
+    " the first one; the next ones). And probably with `gd`, `*`.
+    "
+    " Besides, during the evaluation of `search#blink()`, `s:blink.tick()`
+    " will be called several times, but the condition to install a hl will never
+    " be satisfied (it makes sure 'hls' is enabled, to avoid installing the
+    " hl, if the cursor has just moved). So, no blinking either.
+    sil! au! my_search
+    set hlsearch
+endfu
+
+"}}}
+" set_nohls "{{{
+
+fu! search#set_nohls() abort
+    augroup my_search
+        au!
+        au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
+    augroup END
+endfu
+
+"}}}
+" set_nohls_on_leave "{{{
+
+" when we do:
+"
+"     c / pattern cr
+"
+" `cr` enables 'hls', we need to disable it
+fu! search#set_nohls_on_leave()
+    augroup my_search
+        au!
+        au InsertLeave * set nohls | au! my_search
+    augroup END
+    " return an empty string, so that the function doesn't insert anything
+    return ''
+endfu
+
+"}}}
 " snr "{{{
 
 fu! s:snr()
@@ -298,49 +496,115 @@ fu! s:snr()
 endfu
 
 "}}}
-" wrap "{{{
+" wrap_cr "{{{
 
-" `wrap()` enables 'hlsearch' then calls `nohl_and_blink()`
-fu! search#wrap(seq) abort
-    if mode() ==# 'c' && getcmdtype() ==# ':' && a:seq ==# "\<cr>"
-        return s:cr(getcmdline())
-    endif
+fu! search#wrap_cr() abort
+    let type = getcmdtype()
 
-    " we store the key inside `s:seq` so that `echo_msg()` knows whether it must
-    " echo a msg or not
-    let s:seq = a:seq
+    if type ==# ':'
+        return s:cr_ex(getcmdline())
 
-    " FIXME:
-    " how to get `n` `N` to move consistently no matter the direction of the
-    " search `/`, or `?` ?
-    " If we change the value of `s:seq` (`n` to `N` or `N` to `n`), when we perform
-    " a backward search we have an error:
-    "
-    "         too recursive mapping
-    "
-    " Why?
+    elseif type =~# '[/?]'
+        call s:set_hls()
+        "       ┌─ <plug>(ms_cr) isn't needed, because Vim doesn't remap a lhs
+        "       │  repeated at the beginning of a rhs (:h recursive_mapping)
+        "       │
+        return "\<cr>\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
 
-    if a:seq ==? 'n'
-        " toggle the value of `n`, `N`
-        let s:seq = (a:seq ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
-        " " convert it into a non-recursive mapping to avoid error "too recursive mapping"
-        " " Pb: when we use non-recursive mapping, we don't see the message anymore
-        " " Maybe because the non-recursive mapping is expanded after the
-        " " message has been displayed ?
-        "
-        " let s:seq = (s:seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
-        "
-        " " Move mappings outside function:
-        " nno <plug>(ms_n) n
-        " nno <plug>(ms_N) N
     else
-        let s:seq = a:seq
+        " Don't modify a `cr` if it's typed on a command line different than Ex or
+        " search. In particular, we don't want our custom `cr` to interfere with
+        " our completion plugin, when it types `cr` to validate an expression
+        " inside the expression register from insert mode:
+        "
+        "     i_c-r = … cr
+        "               │
+        "               └─ must be a regular `cr`, not a custom one
+        return "\<cr>"
     endif
+endfu
 
-    sil! au! my_search | aug! my_search
-    set hlsearch
+"}}}
+" wrap_gd "{{{
 
-    return s:seq."\<plug>(ms_nohl_and_blink)\<plug>(ms_echo_msg)"
+fu! search#wrap_gd(back) abort
+    call s:set_hls()
+    return (a:back ? 'gD' : 'gd')."\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)"
+endfu
+
+"}}}
+" wrap_n "{{{
+
+fu! search#wrap_n(back) abort
+    call s:set_hls()
+
+    " We want `n` and `N` to move consistently no matter the direction of the
+    " search `/`, or `?`.
+    " toggle the value of `n`, `N` if necessary
+    let seq = (a:back ==# 'n' ? 'Nn' : 'nN')[v:searchforward]
+
+    " If we change the value of `seq` (`n` to `N` or `N` to `n`), when we perform
+    " a backward search we have the error:
+    "
+    "         E223: recursive mapping
+    "
+    " Why? Because we are stuck going back and forth between 2 mappings:
+    "
+    "         echo v:searchforward  →  0
+    "
+    "         hit `n`  →  wrap_n() returns `N`  →  returns `n`  →  returns `N`  →  …
+    "
+    " To prevent being stuck in an endless expansion, use non-recursive versions
+    " of `n` and `N`.
+    let seq = (seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
+
+    "                   ┌─ install a fire-once autocmd to disable 'hls' when we move
+    "                   │                    ┌─ unfold if needed, restore the view after `*` &friends
+    "                   │                    │
+    return seq."\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
+    "                                                             │                │
+    "                                                             │                └─ print `[12/34]` kind of message
+    "                                                             └─ make the current match blink
+    "
+    " Vim doesn't wait for everything to be expanded, before beginning typing.
+    " As soon as it finds something which can't be remapped, it types it.
+    " And `n` can't be remapped, because of `:h recursive_mapping`:
+    "
+    "     If the {rhs} starts with {lhs}, the first character is not mapped
+    "     again (this is Vi compatible).
+    "
+    " Therefore, here, Vim types `n` immediately, BEFORE processing the rest
+    " of the mapping.
+    " This explains why Vim FIRST moves the cursor with n, THEN makes the
+    " current position blink.
+    " If Vim expanded everything before even beginning typing, the blinking
+    " would occur at the current position, instead of the next match.
+endfu
+
+"}}}
+" wrap_star "{{{
+
+fu! search#wrap_star(seq) abort
+    " `winline()` returns the position of the current line from the top line of
+    " the window. The position / index of the latter is 1.
+    let s:winline = winline()
+
+    call s:set_hls()
+
+    " By default `*` is stupid, it ignores 'smartcase'.
+    " To workaround this issue, we type this:
+    "         / up cr c-o
+    "
+    " It searches for the same pattern than `*` but with `/`.
+    " The latter takes 'smartcase' into account.
+    "
+    " In visual mode, we already do this, so, it's not necessary from there.
+    " But we let the function do it again anyway, because it doesn't cause any issue.
+    " If it causes an issue, we should test the current mode, and return the
+    " keys only from visual mode.
+    return a:seq."\<plug>(ms_prev)"
+       \ .       "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
+       \ .       "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
 endfu
 
 "}}}
