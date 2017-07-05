@@ -1,22 +1,22 @@
 " blink "{{{
 
 " `s:blink` must be initialized before defining the functions
-" `s:blink.tick()` and `s:blink.clear()`.
-let s:blink = { 'ticks': 5, 'delay': 50 }
+" `s:blink.tick()` and `s:blink.delete()`.
+let s:blink = { 'ticks': 4, 'delay': 50 }
 
 " What does `blink.tick()` do? "{{{
 "
-" When the initial number of ticks is even, `blink.tick()` cycles between
-" installing and removing the highlighting:
+" It cycles between installing and removing the highlighting:
+" If the initial numerical value of the variable `s:blink.ticks` is even,
+" here's what happens:
 "
-" ticks = 4
+" ticks = 4   (immediately decremented)
 "         3 → install hl
 "         2 → remove hl (when evaluating `self.delete()`)
 "         1 → install hl
 "         0 → remove hl
 "
-" Same thing when the number of ticks is odd, except at the end, when `ticks = 0`,
-" it doesn't install the hl, because it's not active anymore:
+" If it's odd:
 "
 " ticks = 5
 "         4 → install hl
@@ -86,16 +86,17 @@ fu! s:blink.tick(_) abort
 
     "  (re-)install the hl if:
     "
-    "  ┌─ you haven't just deleted it
-    "  │                 ┌─ the blinking is still active
-    "  │                 │         ┌─ the cursor hasn't moved
-    "  │                 │         │
-    if !self.clear() && &hlsearch && active
+    "  ┌─ try to delete the hl, and check we haven't been able to do so
+    "  │  if we have, we don't want to re-install a hl immediately (only next tick)
+    "  │                 ┌─ the cursor hasn't moved
+    "  │                 │            ┌─ the blinking is still active
+    "  │                 │            │
+    if !self.delete() && &hlsearch && active
 
         " '\v%%%dl%%>%dc%%<%dc'
         "    │    │     │
-        "    │    │     └─ '%<'.(col('.')+2).'c'      →    before    column    `col('.')+2`
-        "    │    └─ '%<'.max([0, col('.')-2]).'c'    →    after     column    `max(0, col('.')-2)`
+        "    │    │     └─ '%<'.(col('.')+3).'c'      →    before    column    `col('.')+3`
+        "    │    └─ '%<'.max([0, col('.')-3]).'c'    →    after     column    `max(0, col('.')-3)`
         "    └─ '%'.line('.').'l'                     →    on        line      `line('.')`
 
         let w:blink_id = matchadd('IncSearch',
@@ -113,14 +114,15 @@ fu! s:blink.tick(_) abort
         " call `s:blink.tick()` (current function) after `s:blink.delay` ms
         call timer_start(self.delay, self.tick)
         "                            │
-        "                            └─ it's a funcref, so no need to surround
-        "                               it with single quotes
+        "                            └─ we need `self.key` to be evaluated as a key in a dictionary,
+        "                               whose value is a funcref, so don't put quotes around
     endif
 endfu
 
-" In `s:blink.tick()`, we test the output of this function to decide
-" whether we should create a match.
-fu! s:blink.clear() abort
+" This function is a routine (it changes the state of the buffer), but we also
+" use it for its output.
+" In `s:blink.tick()`, we test the latter to decide whether we should create a match.
+fu! s:blink.delete() abort
     if exists('w:blink_id')
         call matchdelete(w:blink_id)
         unlet w:blink_id
@@ -130,11 +132,11 @@ fu! s:blink.clear() abort
 endfu
 
 fu! search#blink() abort
-    " we must reset the keys `ticks` and `delay` inside `s:blink`,
-    " every time `search#blink()` is called
-    let [ s:blink.ticks, s:blink.delay ] = [ 5, 50 ]
+    " every time `search#blink()` is called, we must reset the keys `ticks` and
+    " `delay` of the dictionary `s:blink`
+    let [ s:blink.ticks, s:blink.delay ] = [ 4, 50 ]
 
-    call s:blink.clear()
+    call s:blink.delete()
     call s:blink.tick(0)
     return ''
 endfu
@@ -150,8 +152,10 @@ endfu
 " would need to do the same in this file, when it's called from `wrap_cr()`.
 
 fu! s:cr_ex(line) abort
+    let [ beginning, ending ] = [ '\v\C^\s*', '\s*$' ]
+
     " g//#
-    if a:line =~# '^g.*#$'
+    if a:line =~# beginning.'g.*#'.ending
         " If we're on the Ex command line, it ends with a number sign, and we
         " hit Enter, return the Enter key, and add a colon at the end of it.
         "
@@ -166,17 +170,17 @@ fu! s:cr_ex(line) abort
         return "\<cr>:"
 
     " ls
-    elseif a:line =~# '\v\C^\s*%(ls|buffers|files)\s*$'
+    elseif a:line =~# beginning.'%(ls|buffers|files)'.ending
 
         return "\<cr>:b "
 
     " ilist
-    elseif a:line =~# '\v\C^\s*%(d|i)l%[ist]\s+'
+    elseif a:line =~# beginning.'%(d|i)l%[ist]\s+'
 
         return "\<cr>:".matchstr(a:line, '\S').'j '
 
     " clist
-    elseif a:line =~# '\v\C^\s*%(c|l)l%[ist]\s*$'
+    elseif a:line =~# beginning.'%(c|l)l%[ist]'.ending
 
         " allow Vim's pager to display the full contents of any command,
         " even if it takes more than one screen; don't stop after the first
@@ -189,21 +193,21 @@ fu! s:cr_ex(line) abort
         return "\<cr>:".repeat(matchstr(a:line, '\S'), 2).' '
 
     " chistory
-    elseif a:line =~# '\v\C^\s*%(c|l)hi%[story]\s*$'
+    elseif a:line =~# beginning.'%(c|l)hi%[story]'.ending
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:sil ".matchstr(a:line, '\S').'older '
 
     " oldfiles
-    elseif a:line =~# '\v\C^\s*old%[files]\s*$'
+    elseif a:line =~# beginning.'old%[files]'.ending
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:e #<"
 
     " changes
-    elseif a:line =~# '\v\C^\s*changes\s*$'
+    elseif a:line =~# beginning.'changes'.ending
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
@@ -215,7 +219,7 @@ fu! s:cr_ex(line) abort
         return ''
 
     " jumps
-    elseif a:line =~# '\v\C^\s*ju%[mps]\s*$'
+    elseif a:line =~# beginning.'ju%[mps]'.ending
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
@@ -225,7 +229,7 @@ fu! s:cr_ex(line) abort
         return ''
 
     " marks
-    elseif a:line =~# '\v\C^\s*marks\s*$'
+    elseif a:line =~# beginning.'marks'.ending
 
         set nomore
         call timer_start(10, s:snr().'reset_more')
@@ -255,13 +259,15 @@ endfu
 "
 " How it works? ; if the current position is near:
 "
-"     the end, it's faster to compute the number of matches from the current
-"     line to the end, then subtract it from the total (the function is only
-"     invoked if the buffer hasn't changed, so `total` is the same as the last time)
+"     - the end, it's faster to compute the number of matches from the current
+"       line to the end, then subtract it from the total (the function is only
+"       invoked if the buffer and the pattern haven't changed, so `total` is the
+"       same as the last time)
 "
-"     the position where we were last time we computed the number of matches above,
-"     it's faster to compute the number of matches between the 2 positions, then
-"     add/subtract it from the cached number of matches above the old position
+"     - the position where we were last time we invoked this function,
+"       it's faster to compute the number of matches between the 2 positions, then
+"       add/subtract it from the cached number of matches which were above the
+"       old position
 
 fu! s:matches_above()
     " if we're at the beginning of the buffer, there can't be anything above
@@ -273,7 +279,8 @@ fu! s:matches_above()
 
     " this function is called only if `b:changedtick` hasn't changed, so
     " even though the position of the cursor may have changed, `total` can't
-    " have changed
+    " have changed ─────────────┐
+    "                           │
     let [ old_line, old_before, total ] = b:ms_cache
 
     let line = line('.')
@@ -313,20 +320,31 @@ endfu
 
 " Return 2-element array, containing current index and total number of matches
 " of last search pattern in the current buffer.
+"
+" We use `:s///gen` to compute the number of matches inside various ranges,
+" because it seems faster than `:while + search()`.
+" But, Ex commands only work on entire lines. So, we'll split the computing in
+" 2 parts:
+"
+"     - number of matches above current line (`:s///gen`)
+"     - number of matches on current line (`:while + search()`)
+
 fu! s:matches_count() abort
     let view = winsaveview()
-    " folds affect range of ex commands
-    " https://stackoverflow.com/q/33190754/8243465
+    " folds affect range of ex commands:
+    "     https://stackoverflow.com/q/33190754/8243465
+    "
+    " we don't want folds to affect `:s///gen`
     let fen_save = &l:fen
     setl nofoldenable
 
-    " we must compute the number of matches on the current line NOW
-    " afterwards, when `s:matches_above()` or `s:matches_in_range()` is
-    " invoked, we'll be somewhere else
+    " We must compute the number of matches on the current line NOW.
+    " As soon as we invoke `s:matches_above()` or `s:matches_in_range()`,
+    " we'll be somewhere else.
     let in_line = s:matches_in_line()
 
-    " the cache we have stored in `b:ms_cache` is only useful if neither the
-    " pattern nor the buffer has changed
+    " check the validity of the cache we have stored in `b:ms_cache`
+    " it's only useful if neither the pattern nor the buffer has changed
     let cache_id = [ @/, b:changedtick ]
     if get(b:, 'ms_cache_id', []) ==# cache_id
         let before = s:matches_above()
@@ -337,6 +355,7 @@ fu! s:matches_count() abort
         let total  = before + s:matches_in_range('.,$')
     endif
 
+    " update the cache
     let b:ms_cache    = [ line('.'), before, total ]
     let b:ms_cache_id = cache_id
 
@@ -383,8 +402,8 @@ endfu
 "}}}
 " nice_view "{{{
 
-" make us a nice view, by opening folds if any, and by restoring the view if
-" it changed but we wanted to stay where we are (happens with `*` and friends)
+" make a nice view, by opening folds if any, and by restoring the view if
+" it changed but we wanted to stay where we were (happens with `*` and friends)
 
 fu! search#nice_view() abort
     let seq = foldclosed('.') != -1 ? 'zMzv' : ''
@@ -607,8 +626,8 @@ fu! search#wrap_star(seq) abort
     "
     " In visual mode, we already do this, so, it's not necessary from there.
     " But we let the function do it again anyway, because it doesn't cause any issue.
-    " If it causes an issue, we should test the current mode, and return the
-    " keys only from visual mode.
+    " If it causes an issue, we should test the current mode, and add the
+    " keys on the last 2 lines only from normal mode.
     return a:seq."\<plug>(ms_prev)"
        \ .       "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
        \ .       "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"

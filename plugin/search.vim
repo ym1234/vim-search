@@ -106,13 +106,18 @@ nmap  <silent> <expr>  N    search#wrap_n(1)
 " FIXME:
 " If the next occurrence of the word under the cursor is not visible on the
 " screen (or its distance from the last line of the screen is < &scrolloff),
-" the latter will “flash“. That's because the screen has to be redrawn,
-" when the cursor moves back and forth between the current and the next word.
-" It would be hard to get rid of it, because we need to perform a search with
-" `/` to be sure that 'smartcase' is taken into account.
+" the latter will “flash“. That's because the cursor moves back and forth
+" between the current and the next word. It would be hard to get rid of it,
+" because we need to perform a search with `/` to be sure that 'smartcase'
+" is taken into account.
 nmap <silent> <expr>  *    search#wrap_star('*')
 "                          │
-"                          └─ * c-o / up cr c-o    + <number> c-e / c-y    <plug>(ms_set_nohls)
+"                          └─ * c-o
+"                             / up cr c-o
+"                             <plug>(ms_set_nohls)
+"                             <plug>(ms_nice_view)  ⇔  <number> c-e / c-y
+"                             <plug>(ms_blink)
+"                             <plug>(ms_index)
 
 nmap <silent> <expr>  #    search#wrap_star('#')
 nmap <silent> <expr>  g*   search#wrap_star('g*')
@@ -120,20 +125,27 @@ nmap <silent> <expr>  g#   search#wrap_star('g#')
 
 " NOTE:
 "
-" If we want to search a visual selection, we probably don't need to add the
-" anchors. So our implementation of `v_*` and `v_#` don't add them.
-" And thus, we don't need to implement `g*` and `g#` mappings.
+" If we search a visual selection, we probably don't want to add the anchors:
+"         \< \>
 "
-" `escape()` escapes special characters that may be present inside the search
-" register. But it needs to know in which direction we're searching.
-" Because if we search forward, then `/` is special. But if we search
-" backward, then `/` is not special, but `?` is.
-" That's why we pass a numerical argument to it (0 or 1). It stands for the direction.
+" So our implementation of `v_*` and `v_#` don't add them.
+" And thus, we don't need to implement `g*` and `g#` mappings.
 
-"                                ┌─ copy visual selection
-"                                │┌─ search for
-"                                ││      ┌ insert an expression
-"                                ││┌─────┤
+" NOTE:
+"
+" `search#escape()` escapes special characters that may be present inside the
+" search register. But it needs to know in which direction we're searching.
+" Because if we search forward, then `/` is special. But if we search
+" backward, it's `?` which is special, not `/`.
+" That's why we pass a numerical argument to it (0 or 1).
+" It stands for the direction.
+
+"              ┌ just append keys at the end to add some fancy features
+"              │
+"              │                 ┌─ copy visual selection
+"              │                 │┌─ search for
+"              │                 ││      ┌ insert an expression
+"              │                 ││┌─────┤
 xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
 "                                         └──────────────┤│             │
 "                                                        ││             └─ validate search
