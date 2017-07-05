@@ -142,6 +142,13 @@ endfu
 "}}}
 " cr_ex "{{{
 
+" TODO:
+" Extract `s:cr_ex()`, which has nothing to do with the search, into
+" `myfuncs.vim`?
+"
+" Pb: if we ever change the name of the function, inside `myfuncs.vim`, we
+" would need to do the same in this file, when it's called from `wrap_cr()`.
+
 fu! s:cr_ex(line) abort
     " g//#
     if a:line =~# '^g.*#$'
