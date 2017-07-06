@@ -396,6 +396,8 @@ endfu
 
 fu! search#matches_print() abort
     let [current, total] = s:matches_count()
+    " not necessary in Vim, but is in neovim
+    redraw
     echo @/.' ['.current.'/'.total.']'
 endfu
 
