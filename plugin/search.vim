@@ -62,7 +62,7 @@ cmap <expr> <cr> search#wrap_cr()
 augroup ms_cmdwin
   au!
   au CmdWinEnter * if getcmdwintype() =~ '[/?]'
-                \|     nmap <buffer> <cr> <cr><plug>(ms_index)
+                \|     nmap <buffer> <nowait> <cr> <cr><plug>(ms_index)
                 \| endif
 augroup END
 
