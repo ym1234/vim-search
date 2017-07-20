@@ -152,7 +152,11 @@ endfu
 " would need to do the same in this file, when it's called from `wrap_cr()`.
 
 fu! s:cr_ex(line) abort
-    let [ beginning, ending ] = [ '\v\C^\s*', '\s*$' ]
+    "                                  ┌─ we could add `\s*` but we don't,
+    "                                  │  so that we can execute the original
+    "                                  │  command by prefixing it with a space
+    "                                  │
+    let [ beginning, ending ] = [ '\v\C^', '\s*$' ]
 
     " g//#
     if a:line =~# beginning.'g.*#'.ending
