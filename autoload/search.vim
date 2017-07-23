@@ -239,6 +239,12 @@ fu! s:cr_ex(line) abort
         call timer_start(10, s:snr().'reset_more')
         return "\<cr>:norm! `"
 
+    " when we copy a line of vimscript and paste it on the command line,
+    " sometimes the newline gets copied and translated into a literal CR,
+    " which raises an error:    remove it
+    elseif a:line[-1:-1] ==# "\<cr>"
+        return "\<bs>\<cr>"
+
     else
         " there's no infinite remapping (`:h recursive_mapping`):
         "
