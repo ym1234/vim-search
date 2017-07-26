@@ -245,6 +245,10 @@ fu! s:cr_ex(line) abort
     elseif a:line[-1:-1] ==# "\<cr>"
         return "\<bs>\<cr>"
 
+    " sometimes, we type `:h functionz)` instead of `:h function()`
+    elseif a:line[-2:-1] ==# 'z)'
+        return "\<bs>\<bs>()\<cr>"
+
     else
         " there's no infinite remapping (`:h recursive_mapping`):
         "
