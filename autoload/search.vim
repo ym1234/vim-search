@@ -246,7 +246,7 @@ fu! s:cr_ex(line) abort
         return "\<bs>\<cr>"
 
     " sometimes, we type `:h functionz)` instead of `:h function()`
-    elseif a:line[-2:-1] ==# 'z)'
+    elseif a:line =~# beginning.'h%[elp]\s+\S+z\)'.ending
         return "\<bs>\<bs>()\<cr>"
 
     else
