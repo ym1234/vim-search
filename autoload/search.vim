@@ -549,14 +549,14 @@ fu! search#wrap_cr() abort
     elseif type =~# '[/?]'
         call s:set_hls()
 
-        " if we set 'lazyredraw', when we search a pattern absent from the buffer,
+        " If we set 'lazyredraw', when we search a pattern absent from the buffer,
         " the search command will be displayed, which gives:
         "         - command
         "         - error
         "         - prompt
-        let lz_save = &lz
+        let lz = &lz
         set nolazyredraw
-        call timer_start(0, {-> execute('let &lz = lz_save')})
+        call timer_start(0, {-> execute('set '.(lz ? '' : 'no').'lazyredraw')})
 
         "       ┌─ <plug>(ms_cr) isn't needed, because Vim doesn't remap a lhs
         "       │  repeated at the beginning of a rhs (:h recursive_mapping)
