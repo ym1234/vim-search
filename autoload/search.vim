@@ -509,7 +509,7 @@ endfu
 fu! search#set_nohls() abort
     augroup my_search
         au!
-        au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
+        au CursorMoved,CursorMovedI * set nohlsearch lazyredraw | au! my_search
     augroup END
 endfu
 
@@ -548,6 +548,17 @@ fu! search#wrap_cr() abort
 
     elseif type =~# '[/?]'
         call s:set_hls()
+
+        " if we set 'lazyredraw', when we search a pattern absent from the buffer,
+        " the search command will be displayed, which gives:
+        "         - command
+        "         - error
+        "         - prompt
+        " We temporarily disable it. We'll re-enable it later in
+        " `set_nohls()`.
+        let lz_save = &lz
+        set nolazyredraw
+
         "       ┌─ <plug>(ms_cr) isn't needed, because Vim doesn't remap a lhs
         "       │  repeated at the beginning of a rhs (:h recursive_mapping)
         "       │
