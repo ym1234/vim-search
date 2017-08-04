@@ -332,6 +332,26 @@ endfu
 "}}}
 " matches_count "{{{
 
+" FIXME:
+" We call `matches_in_range()` which executes `s///gen` to count the number of
+" matches. It alters the last substitute string (~). To preserve it, inside
+" `matches_count()`, we could add just after `winsaveview()`:
+"
+"     let old_rep = matchstr(getline(search('~', 'cn')), '~')
+"
+" Then, just before `winrestview()`:
+"
+"     if !empty(old_rep)
+"         call execute('s//'.old_rep.'/en')
+"     endif
+"
+" But it would work only if the last substitute string is present in the
+" current buffer. Besides, it also alters the last flags.
+"
+" The perfect solution would be to execute `s///gen` without Vim logging
+" anything.
+
+
 " Return 2-element array, containing current index and total number of matches
 " of last search pattern in the current buffer.
 "
