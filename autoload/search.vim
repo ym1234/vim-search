@@ -1,10 +1,10 @@
-" blink "{{{
+" blink {{{1
 
 " `s:blink` must be initialized before defining the functions
 " `s:blink.tick()` and `s:blink.delete()`.
 let s:blink = { 'ticks': 4, 'delay': 50 }
 
-" What does `blink.tick()` do? "{{{
+" What does `blink.tick()` do? {{{
 "
 " It cycles between installing and removing the highlighting:
 " If the initial numerical value of the variable `s:blink.ticks` is even,
@@ -35,7 +35,7 @@ fu! s:blink.tick(_) abort
 
     let active = self.ticks > 0
 
-    " What does the next condition do? "{{{
+    " What does the next condition do? {{{
     "
     " PART1:
     " We need the blinking to stop and not go on forever.
@@ -141,8 +141,7 @@ fu! search#blink() abort
     return ''
 endfu
 
-"}}}
-" cr_ex "{{{
+" cr_ex {{{1
 
 " TODO:
 " Extract `s:cr_ex()`, which has nothing to do with the search, into
@@ -258,15 +257,11 @@ fu! s:cr_ex(line) abort
     endif
 endfu
 
-"}}}
-" escape "{{{
-
-fu! search#escape(backward) abort
+fu! search#escape(backward) abort "{{{1
     return '\V'.substitute(escape(@", '\'.(a:backward ? '?' : '/')), "\n", '\\n', 'g')
 endfu
 
-"}}}
-" matches_above "{{{
+" matches_above {{{1
 
 " Efficiently recalculate number of matches above current line using values
 " cached from the previous run.
@@ -329,8 +324,7 @@ fu! s:matches_above()
     endif
 endfu
 
-"}}}
-" matches_count "{{{
+" matches_count {{{1
 
 " FIXME:
 " We call `matches_in_range()` which executes `s///gen` to count the number of
@@ -399,11 +393,8 @@ fu! s:matches_count() abort
     return [ before + in_line, total ]
 endfu
 
-"}}}
-" matches_in_line "{{{
-
+fu! s:matches_in_line() abort "{{{1
 " Return number of matches before the cursor, on the current line.
-fu! s:matches_in_line() abort
     let [ line, col ] = [ line('.'), col('.') ]
 
     norm! 0
@@ -417,26 +408,19 @@ fu! s:matches_in_line() abort
     return matches
 endfu
 
-"}}}
-" matches_in_range "{{{
-
-fu! s:matches_in_range(range) abort
+fu! s:matches_in_range(range) abort "{{{1
     let output = execute(a:range.'s///gen')
     return str2nr(matchstr(output, '\d\+'))
 endfu
 
-"}}}
-" matches_print "{{{
-
-fu! search#matches_print() abort
+fu! search#matches_print() abort "{{{1
     let [current, total] = s:matches_count()
     " not necessary in Vim, but is in neovim
     redraw
     echo @/.' ['.current.'/'.total.']'
 endfu
 
-"}}}
-" nice_view "{{{
+" nice_view {{{1
 
 " make a nice view, by opening folds if any, and by restoring the view if
 " it changed but we wanted to stay where we were (happens with `*` and friends)
@@ -444,7 +428,7 @@ endfu
 fu! search#nice_view() abort
     let seq = foldclosed('.') != -1 ? 'zMzv' : ''
 
-    " What are `s:winline` and `s:windiff`? "{{{
+    " What are `s:winline` and `s:windiff`? {{{
     "
     " `s:winline` exists only if we hit `*`, `#` (visual/normal), `g*` or `g#`.
     "
@@ -499,17 +483,11 @@ fu! search#nice_view() abort
     return seq
 endfu
 
-"}}}
-" reset_more "{{{
-
-fu! s:reset_more(...)
+fu! s:reset_more(...) "{{{1
     set more
 endfu
 
-"}}}
-" set_hls "{{{
-
-fu! s:set_hls() abort
+fu! s:set_hls() abort "{{{1
     " If we don't remove the autocmd, when `n` will be typed, the cursor will
     " move, and 'hls' will be disabled. We want 'hls' to stay enabled even
     " after the `n` motion. Same issue with the motion after a `/` search (not
@@ -523,18 +501,14 @@ fu! s:set_hls() abort
     set hlsearch
 endfu
 
-"}}}
-" set_nohls "{{{
-
-fu! search#set_nohls() abort
+fu! search#set_nohls() abort "{{{1
     augroup my_search
         au!
         au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
     augroup END
 endfu
 
-"}}}
-" set_nohls_on_leave "{{{
+" set_nohls_on_leave {{{1
 
 " when we do:
 "
@@ -550,17 +524,11 @@ fu! search#set_nohls_on_leave()
     return ''
 endfu
 
-"}}}
-" snr "{{{
-
-fu! s:snr()
+fu! s:snr() "{{{1
     return matchstr(expand('<sfile>'), '<SNR>\d\+_')
 endfu
 
-"}}}
-" wrap_cr "{{{
-
-fu! search#wrap_cr() abort
+fu! search#wrap_cr() abort "{{{1
     let type = getcmdtype()
 
     if type ==# ':'
@@ -596,18 +564,12 @@ fu! search#wrap_cr() abort
     endif
 endfu
 
-"}}}
-" wrap_gd "{{{
-
-fu! search#wrap_gd(back) abort
+fu! search#wrap_gd(back) abort "{{{1
     call s:set_hls()
     return (a:back ? 'gD' : 'gd')."\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)"
 endfu
 
-"}}}
-" wrap_n "{{{
-
-fu! search#wrap_n(back) abort
+fu! search#wrap_n(back) abort "{{{1
     call s:set_hls()
 
     " We want `n` and `N` to move consistently no matter the direction of the
@@ -653,10 +615,7 @@ fu! search#wrap_n(back) abort
     " would occur at the current position, instead of the next match.
 endfu
 
-"}}}
-" wrap_star "{{{
-
-fu! search#wrap_star(seq) abort
+fu! search#wrap_star(seq) abort "{{{1
     " `winline()` returns the position of the current line from the top line of
     " the window. The position / index of the latter is 1.
     let s:winline = winline()
@@ -679,4 +638,4 @@ fu! search#wrap_star(seq) abort
        \ .       "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
 endfu
 
-"}}}
+

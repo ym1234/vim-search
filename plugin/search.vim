@@ -1,4 +1,4 @@
-" Links "{{{
+" Links {{{1
 "
 " Ideas for other implementations.
 "
@@ -15,9 +15,7 @@
 " Source:
 " https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
 
-"}}}
-
-" Disable unwanted recursivity "{{{
+" Disable unwanted recursivity {{{1
 "
 " We remap the following keys RECURSIVELY:
 "
@@ -42,8 +40,7 @@ nno  <plug>(ms_c_e)    <c-e>
 nno  <plug>(ms_c_y)    <c-y>
 nno  <plug>(ms_prev)   <c-o>
 
-"}}}
-" cr  gd  n "{{{
+" cr  gd  n {{{1
 
 " NOTE:
 " Don't add `<silent>` to the next mapping.
@@ -92,8 +89,7 @@ nmap  <silent> <expr>  N    search#wrap_n(1)
 "
 " How to tell Vim to go on processing the mapping even though the beginning failed?
 
-"}}}
-" Star and friends "{{{
+" Star and friends {{{1
 "
 " By default, you can search automatically for the word under the cursor with
 " * or #. But you can't do the same for the text visually selected.
@@ -154,8 +150,7 @@ xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(
 
 xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
 
-"}}}
-" Utilities (blink, index, …) "{{{
+" Utilities (blink, index, …) {{{1
 
 nmap  <expr>  <plug>(ms_nice_view)  search#nice_view()
 
@@ -181,4 +176,4 @@ ino          <plug>(ms_index)      <nop>
 ino          <plug>(ms_blink)      <nop>
 ino          <plug>(ms_nice_view)  <nop>
 
-"}}}
+
