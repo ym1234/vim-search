@@ -156,7 +156,16 @@ nmap  <expr>  <plug>(ms_nice_view)  search#nice_view()
 
 nno           <plug>(ms_blink)      :<c-u>call search#blink()<cr>
 nno           <plug>(ms_index)      :<c-u>call search#matches_print()<cr>
-nno           <plug>(ms_set_nohls)  :<c-u>call search#set_nohls()<cr>
+nno           <plug>(ms_set_nohls)  :<c-u>call timer_start(0, { -> execute('call search#set_nohls()') })<cr>
+"                                              │
+"                                              └─ We can't invoke `search#nohls()` immediately,
+"                                                 because it would install the autocmd disabling 'hls' too soon.
+"                                                 'hls' would be enabled then disabled immediately after every
+"                                                 `n` motion.
+"                                                 NOTE:
+"                                                 For some reason, this problem occurs only if the `matchparen`
+"                                                 plugin is disabled, and we're not in a Vim buffer.
+
 
 " Without the next mappings, we face this issue:
 "     https://github.com/junegunn/vim-slash/issues/4
