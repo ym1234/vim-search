@@ -474,9 +474,9 @@ fu! search#nice_view() abort
         " We must use non-recursive `<plug>(…)` mappings.
 
         let seq .= windiff > 0
-                \   ? windiff."\<plug>(ms_c_e)"
+                \   ? windiff."\<c-e>"
                 \   : windiff < 0
-                \     ? -windiff."\<plug>(ms_c_y)"
+                \     ? -windiff."\<c-y>"
                 \     : ''
     endif
 

@@ -36,8 +36,6 @@ cno  <plug>(ms_cr)     <cr>
 nno  <plug>(ms_slash)  /
 nno  <plug>(ms_n)      n
 nno  <plug>(ms_N)      N
-nno  <plug>(ms_c_e)    <c-e>
-nno  <plug>(ms_c_y)    <c-y>
 nno  <plug>(ms_prev)   <c-o>
 
 " cr  gd  n {{{1
@@ -152,7 +150,7 @@ xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(
 
 " Utilities (blink, index, …) {{{1
 
-nmap  <expr>  <plug>(ms_nice_view)  search#nice_view()
+nno   <expr>  <plug>(ms_nice_view)  search#nice_view()
 
 nno           <plug>(ms_blink)      :<c-u>call search#blink()<cr>
 nno           <plug>(ms_index)      :<c-u>call search#matches_print()<cr>
