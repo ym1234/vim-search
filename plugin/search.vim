@@ -156,13 +156,28 @@ nno           <plug>(ms_blink)      :<c-u>call search#blink()<cr>
 nno           <plug>(ms_index)      :<c-u>call search#matches_print()<cr>
 nno           <plug>(ms_set_nohls)  :<c-u>call timer_start(0, { -> execute('call search#set_nohls()') })<cr>
 "                                              │
-"                                              └─ We can't invoke `search#nohls()` immediately,
-"                                                 because it would install the autocmd disabling 'hls' too soon.
-"                                                 'hls' would be enabled then disabled immediately after every
-"                                                 `n` motion.
-"                                                 NOTE:
-"                                                 For some reason, this problem occurs only if the `matchparen`
-"                                                 plugin is disabled, and we're not in a Vim buffer.
+" We can't invoke `search#nohls()` immediately, because it would install
+" the autocmd disabling 'hls' too soon. 'hls' would be enabled then disabled
+" immediately after every `n` motion.
+"
+" NOTE:
+" For some reason, this problem occurs only if the `matchparen` plugin
+" is disabled, and we're in a buffer where the value of 'conceallevel' is
+" 0 (ex: markdown).
+"
+" More precisely, only if we delete a specific autocmd:
+"
+"         au! matchparen CursorMoved
+"
+" NOTE:
+" If we used `<expr>`, we wouldn't need the timer.
+" It seems `<expr>` would delay the processing of `set_nohls()`.
+"
+" FIXME:
+" `<plug>(ms_blink)`, `<plug>(ms_index)`, `<plug>(ms_nice_view)`
+" all seem to be processed after the motion, even when `matchparen` is disabled.
+" Why `<plug>(ms_set_nohls)` is an exception?
+
 
 
 " Without the next mappings, we face this issue:
