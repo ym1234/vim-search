@@ -469,10 +469,6 @@ fu! search#nice_view() abort
         " Thus, we use `C-e`. Otherwise, we use `C-y`. Each time we must
         " prefix the key with the right count (± `windiff`).
 
-        " However, we can't return the keys directly, because we've remapped
-        " `C-e` and `C-y` to scroll faster than originally.
-        " We must use non-recursive `<plug>(…)` mappings.
-
         let seq .= windiff > 0
                 \?     windiff."\<c-e>"
                 \: windiff < 0
