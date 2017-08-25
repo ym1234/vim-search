@@ -183,7 +183,7 @@ fu! s:cr_ex(line) abort
         return "\<cr>:".matchstr(a:line, '\S').'j '
 
     " clist
-    elseif a:line =~# beginning.'%(c|l)l%[ist]'.ending
+    elseif a:line =~# beginning.'%(c|l)li%[st]'.ending
 
         " allow Vim's pager to display the full contents of any command,
         " even if it takes more than one screen; don't stop after the first
