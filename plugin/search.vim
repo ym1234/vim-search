@@ -153,7 +153,7 @@ xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(
 nno   <expr>   <plug>(ms_view)    search#view()
 
 nno            <plug>(ms_blink)   :<c-u>call search#blink()<cr>
-nno            <plug>(ms_index)   :<c-u>call search#matches_print()<cr>
+nno            <plug>(ms_index)   :<c-u>call search#index()<cr>
 nno            <plug>(ms_nohls)   :<c-u>call timer_start(0, { -> execute('call search#nohls()') })<cr>
 "                                              │
 " We can't invoke `search#nohls()` immediately, because it would install

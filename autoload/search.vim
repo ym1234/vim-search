@@ -261,6 +261,13 @@ fu! search#escape(backward) abort "{{{1
     return '\V'.substitute(escape(@", '\'.(a:backward ? '?' : '/')), "\n", '\\n', 'g')
 endfu
 
+fu! search#index() abort "{{{1
+    let [current, total] = s:matches_count()
+    " not necessary in Vim, but is in neovim
+    redraw
+    echo '['.current.'/'.total.'] '.@/
+endfu
+
 " matches_above {{{1
 
 " Efficiently recalculate number of matches above current line using values
@@ -411,13 +418,6 @@ endfu
 fu! s:matches_in_range(range) abort "{{{1
     let output = execute(a:range.'s///gen')
     return str2nr(matchstr(output, '\d\+'))
-endfu
-
-fu! search#matches_print() abort "{{{1
-    let [current, total] = s:matches_count()
-    " not necessary in Vim, but is in neovim
-    redraw
-    echo '['.current.'/'.total.'] '.@/
 endfu
 
 fu! search#nohls() abort "{{{1
