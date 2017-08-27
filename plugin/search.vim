@@ -1,5 +1,5 @@
 " Links {{{1
-"
+
 " Ideas for other implementations.
 "
 " Interesting:
@@ -16,7 +16,7 @@
 " https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
 
 " Disable unwanted recursivity {{{1
-"
+
 " We remap the following keys RECURSIVELY:
 "
 "     cr
@@ -32,11 +32,11 @@
 " For anything else, remapping should be forbidden.
 " So, we install non-recursive mappings for various keys we may return in our wrappers.
 
-cno  <plug>(ms_cr)     <cr>
-nno  <plug>(ms_slash)  /
-nno  <plug>(ms_n)      n
-nno  <plug>(ms_N)      N
-nno  <plug>(ms_prev)   <c-o>
+cno   <plug>(ms_cr)      <cr>
+nno   <plug>(ms_slash)   /
+nno   <plug>(ms_n)       n
+nno   <plug>(ms_N)       N
+nno   <plug>(ms_prev)    <c-o>
 
 " cr  gd  n {{{1
 
@@ -88,7 +88,7 @@ nmap  <silent> <expr>  N    search#wrap_n(1)
 " How to tell Vim to go on processing the mapping even though the beginning failed?
 
 " Star and friends {{{1
-"
+
 " By default, you can search automatically for the word under the cursor with
 " * or #. But you can't do the same for the text visually selected.
 " The following mappings work in normal mode, but also in visual mode, to fill
@@ -108,8 +108,8 @@ nmap <silent> <expr>  *    search#wrap_star('*')
 "                          │
 "                          └─ * c-o
 "                             / up cr c-o
-"                             <plug>(ms_set_nohls)
-"                             <plug>(ms_nice_view)  ⇔  <number> c-e / c-y
+"                             <plug>(ms_nohls)
+"                             <plug>(ms_view)  ⇔  <number> c-e / c-y
 "                             <plug>(ms_blink)
 "                             <plug>(ms_index)
 
@@ -148,13 +148,13 @@ xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(
 
 xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
 
-" Utilities (blink, index, …) {{{1
+" Customizations (blink, index, …) {{{1
 
-nno   <expr>  <plug>(ms_nice_view)  search#nice_view()
+nno   <expr>   <plug>(ms_view)    search#view()
 
-nno           <plug>(ms_blink)      :<c-u>call search#blink()<cr>
-nno           <plug>(ms_index)      :<c-u>call search#matches_print()<cr>
-nno           <plug>(ms_set_nohls)  :<c-u>call timer_start(0, { -> execute('call search#set_nohls()') })<cr>
+nno            <plug>(ms_blink)   :<c-u>call search#blink()<cr>
+nno            <plug>(ms_index)   :<c-u>call search#matches_print()<cr>
+nno            <plug>(ms_nohls)   :<c-u>call timer_start(0, { -> execute('call search#nohls()') })<cr>
 "                                              │
 " We can't invoke `search#nohls()` immediately, because it would install
 " the autocmd disabling 'hls' too soon. 'hls' would be enabled then disabled
@@ -171,13 +171,22 @@ nno           <plug>(ms_set_nohls)  :<c-u>call timer_start(0, { -> execute('call
 "
 " NOTE:
 " If we used `<expr>`, we wouldn't need the timer.
-" It seems `<expr>` would delay the processing of `set_nohls()`.
+" It seems `<expr>` would delay the processing of `nohls()`.
 "
 " FIXME:
-" `<plug>(ms_blink)`, `<plug>(ms_index)`, `<plug>(ms_nice_view)`
+" `<plug>(ms_blink)`, `<plug>(ms_index)`, `<plug>(ms_view)`
 " all seem to be processed after the motion, even when `matchparen` is disabled.
-" Why `<plug>(ms_set_nohls)` is an exception?
+" Why `<plug>(ms_nohls)` is an exception?
 
+
+" Regroup all customizations behind `<plug>(ms_custom)`
+"                                ┌─ install a fire-once autocmd to disable 'hls' when we move
+"                                │               ┌─ unfold if needed, restore the view after `*` &friends
+"                                │               │
+nmap <plug>(ms_custom)    <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
+"                                                               │               │
+"                                  make the current match blink ┘               │
+"                                               print `[12/34]` kind of message ┘
 
 
 " Without the next mappings, we face this issue:
@@ -190,10 +199,10 @@ nno           <plug>(ms_set_nohls)  :<c-u>call timer_start(0, { -> execute('call
 " The problem comes from the wrong assumption that after a `/` search, we are
 " in normal mode. We could also be in insert mode.
 
-" Why don't we disable `<plug>(ms_set_nohls)`?
+" Why don't we disable `<plug>(ms_nohls)`?
 " Because, the search in `c /pattern cr` has enabled 'hls', so we need
 " to disable it.
-ino          <plug>(ms_set_nohls)  <c-r>=search#set_nohls_on_leave()<cr>
-ino          <plug>(ms_index)      <nop>
-ino          <plug>(ms_blink)      <nop>
-ino          <plug>(ms_nice_view)  <nop>
+ino   <plug>(ms_nohls)   <c-r>=search#nohls_on_leave()<cr>
+ino   <plug>(ms_index)   <nop>
+ino   <plug>(ms_blink)   <nop>
+ino   <plug>(ms_view)    <nop>

@@ -420,12 +420,10 @@ fu! search#matches_print() abort "{{{1
     echo '['.current.'/'.total.'] '.@/
 endfu
 
-" nice_view {{{1
-
+fu! search#view() abort "{{{1
 " make a nice view, by opening folds if any, and by restoring the view if
 " it changed but we wanted to stay where we were (happens with `*` and friends)
 
-fu! search#nice_view() abort
     let seq = foldclosed('.') != -1 ? 'zMzv' : ''
 
     " What are `s:winline` and `s:windiff`? {{{
@@ -437,16 +435,16 @@ fu! search#nice_view() abort
     " The goal of `s:windiff` is to restore the state of the window after we
     " search with `*` and friends.
     "
-    " When we hit `*`, the rhs is evaluated the output of `search#wrap_star()`.
+    " When we hit `*`, the rhs is evaluated into the output of `search#wrap_star()`.
     " During the evaluation, the variable `s:winline` is set.
     " The result of the evaluation is (broken on 3 lines to make it more
     " readable):
     "
     "     *<plug>(ms_prev)
     "      <plug>(ms_slash)<up><plug>(ms_cr)<plug>(ms_prev)
-    "      <plug>(ms_set_nohls)<plug>(ms_nice_view)<plug>(ms_blink)<plug>(ms_index)
+    "      <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
     "
-    " What's important to understand here, is that `nice_view()` is called AFTER
+    " What's important to understand here, is that `view()` is called AFTER
     " `search#wrap_star()`. Therefore, `s:winline` is not necessarily
     " the same as the current output of `winline()`, and we can use:
     "
@@ -493,21 +491,21 @@ fu! s:set_hls() abort "{{{1
     set hlsearch
 endfu
 
-fu! search#set_nohls() abort "{{{1
+fu! search#nohls() abort "{{{1
     augroup my_search
         au!
         au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
     augroup END
 endfu
 
-" set_nohls_on_leave {{{1
+" nohls_on_leave {{{1
 
 " when we do:
 "
 "     c / pattern cr
 "
 " `cr` enables 'hls', we need to disable it
-fu! search#set_nohls_on_leave()
+fu! search#nohls_on_leave()
     augroup my_search
         au!
         au InsertLeave * set nohls | au! my_search
@@ -537,7 +535,7 @@ fu! search#wrap_cr() abort "{{{1
         "       ┌─ <plug>(ms_cr) isn't needed, because Vim doesn't remap a lhs
         "       │  repeated at the beginning of a rhs (:h recursive_mapping)
         "       │
-        return "\<cr>\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
+        return "\<cr>\<plug>(ms_custom)"
 
     else
         " Don't modify a `cr` if it's typed on a command line different than Ex or
@@ -554,7 +552,7 @@ endfu
 
 fu! search#wrap_gd(back) abort "{{{1
     call s:set_hls()
-    return (a:back ? 'gD' : 'gd')."\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)"
+    return (a:back ? 'gD' : 'gd')."\<plug>(ms_custom)"
 endfu
 
 fu! search#wrap_n(back) abort "{{{1
@@ -580,14 +578,8 @@ fu! search#wrap_n(back) abort "{{{1
     " of `n` and `N`.
     let seq = (seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
 
-    "                   ┌─ install a fire-once autocmd to disable 'hls' when we move
-    "                   │                    ┌─ unfold if needed, restore the view after `*` &friends
-    "                   │                    │
-    return seq."\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
-    "                                                             │                │
-    "                                                             │                └─ print `[12/34]` kind of message
-    "                                                             └─ make the current match blink
-    "
+    return seq."\<plug>(ms_custom)"
+
     " Vim doesn't wait for everything to be expanded, before beginning typing.
     " As soon as it finds something which can't be remapped, it types it.
     " And `n` can't be remapped, because of `:h recursive_mapping`:
@@ -623,5 +615,5 @@ fu! search#wrap_star(seq) abort "{{{1
     " keys on the last 2 lines only from normal mode.
     return a:seq."\<plug>(ms_prev)"
        \.        "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
-       \.        "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
+       \.        "\<plug>(ms_custom)"
 endfu
