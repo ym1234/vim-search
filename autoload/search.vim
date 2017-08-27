@@ -420,6 +420,43 @@ fu! search#matches_print() abort "{{{1
     echo '['.current.'/'.total.'] '.@/
 endfu
 
+fu! search#nohls() abort "{{{1
+    augroup my_search
+        au!
+        au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
+    augroup END
+endfu
+
+" nohls_on_leave {{{1
+
+" when we do:
+"
+"     c / pattern cr
+"
+" `cr` enables 'hls', we need to disable it
+fu! search#nohls_on_leave()
+    augroup my_search
+        au!
+        au InsertLeave * set nohls | au! my_search
+    augroup END
+    " return an empty string, so that the function doesn't insert anything
+    return ''
+endfu
+
+fu! s:set_hls() abort "{{{1
+    " If we don't remove the autocmd, when `n` will be typed, the cursor will
+    " move, and 'hls' will be disabled. We want 'hls' to stay enabled even
+    " after the `n` motion. Same issue with the motion after a `/` search (not
+    " the first one; the next ones). And probably with `gd`, `*`.
+    "
+    " Besides, during the evaluation of `search#blink()`, `s:blink.tick()`
+    " will be called several times, but the condition to install a hl will never
+    " be satisfied (it makes sure 'hls' is enabled, to avoid installing the
+    " hl, if the cursor has just moved). So, no blinking either.
+    sil! au! my_search
+    set hlsearch
+endfu
+
 fu! search#view() abort "{{{1
 " make a nice view, by opening folds if any, and by restoring the view if
 " it changed but we wanted to stay where we were (happens with `*` and friends)
@@ -475,43 +512,6 @@ fu! search#view() abort "{{{1
     endif
 
     return seq
-endfu
-
-fu! s:set_hls() abort "{{{1
-    " If we don't remove the autocmd, when `n` will be typed, the cursor will
-    " move, and 'hls' will be disabled. We want 'hls' to stay enabled even
-    " after the `n` motion. Same issue with the motion after a `/` search (not
-    " the first one; the next ones). And probably with `gd`, `*`.
-    "
-    " Besides, during the evaluation of `search#blink()`, `s:blink.tick()`
-    " will be called several times, but the condition to install a hl will never
-    " be satisfied (it makes sure 'hls' is enabled, to avoid installing the
-    " hl, if the cursor has just moved). So, no blinking either.
-    sil! au! my_search
-    set hlsearch
-endfu
-
-fu! search#nohls() abort "{{{1
-    augroup my_search
-        au!
-        au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
-    augroup END
-endfu
-
-" nohls_on_leave {{{1
-
-" when we do:
-"
-"     c / pattern cr
-"
-" `cr` enables 'hls', we need to disable it
-fu! search#nohls_on_leave()
-    augroup my_search
-        au!
-        au InsertLeave * set nohls | au! my_search
-    augroup END
-    " return an empty string, so that the function doesn't insert anything
-    return ''
 endfu
 
 fu! search#wrap_cr() abort "{{{1
