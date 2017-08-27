@@ -191,7 +191,7 @@ fu! s:cr_ex(line) abort
         set nomore
 
         " reset 'more' after the keys have been typed
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
 
         return "\<cr>:".repeat(matchstr(a:line, '\S'), 2).' '
 
@@ -199,21 +199,21 @@ fu! s:cr_ex(line) abort
     elseif a:line =~# beginning.'%(c|l)hi%[story]'.ending
 
         set nomore
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
         return "\<cr>:sil ".matchstr(a:line, '\S').'older '
 
     " oldfiles
     elseif a:line =~# beginning.'old%[files]'.ending
 
         set nomore
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
         return "\<cr>:e #<"
 
     " changes
     elseif a:line =~# beginning.'changes'.ending
 
         set nomore
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
         " We don't return the keys directly, because S-left could be remapped
         " to something else, leading to spurious bugs.
         " We need to tell Vim to not remap it. We can't do that with `:return`.
@@ -225,7 +225,7 @@ fu! s:cr_ex(line) abort
     elseif a:line =~# beginning.'ju%[mps]'.ending
 
         set nomore
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
         call feedkeys("\<cr>:norm! \<c-o>\<s-left>", 'in')
         "                                              │
         "                                              └─ don't remap C-o and S-left
@@ -235,7 +235,7 @@ fu! s:cr_ex(line) abort
     elseif a:line =~# beginning.'marks'.ending
 
         set nomore
-        call timer_start(10, s:snr().'reset_more')
+        call timer_start(0, { -> execute('set more') })
         return "\<cr>:norm! `"
 
     " when we copy a line of vimscript and paste it on the command line,
@@ -479,10 +479,6 @@ fu! search#nice_view() abort
     return seq
 endfu
 
-fu! s:reset_more(...) "{{{1
-    set more
-endfu
-
 fu! s:set_hls() abort "{{{1
     " If we don't remove the autocmd, when `n` will be typed, the cursor will
     " move, and 'hls' will be disabled. We want 'hls' to stay enabled even
@@ -518,10 +514,6 @@ fu! search#set_nohls_on_leave()
     augroup END
     " return an empty string, so that the function doesn't insert anything
     return ''
-endfu
-
-fu! s:snr() "{{{1
-    return matchstr(expand('<sfile>'), '<SNR>\d\+_')
 endfu
 
 fu! search#wrap_cr() abort "{{{1
@@ -630,8 +622,6 @@ fu! search#wrap_star(seq) abort "{{{1
     " If it causes an issue, we should test the current mode, and add the
     " keys on the last 2 lines only from normal mode.
     return a:seq."\<plug>(ms_prev)"
-       \ .       "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
-       \ .       "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
+       \.        "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
+       \.        "\<plug>(ms_set_nohls)\<plug>(ms_nice_view)\<plug>(ms_blink)\<plug>(ms_index)"
 endfu
-
-

@@ -197,5 +197,3 @@ ino          <plug>(ms_set_nohls)  <c-r>=search#set_nohls_on_leave()<cr>
 ino          <plug>(ms_index)      <nop>
 ino          <plug>(ms_blink)      <nop>
 ino          <plug>(ms_nice_view)  <nop>
-
-
