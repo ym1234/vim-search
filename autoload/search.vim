@@ -1,3 +1,8 @@
+if exists('g:auto_loaded_mysearch')
+    finish
+endif
+let g:auto_loaded_mysearch = 1
+
 " blink {{{1
 
 " `s:blink` must be initialized before defining the functions

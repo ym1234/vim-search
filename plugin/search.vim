@@ -1,3 +1,8 @@
+if exists('g:loaded_mysearch')
+    finish
+endif
+let g:loaded_mysearch = 1
+
 " Links {{{1
 
 " Ideas for other implementations.
