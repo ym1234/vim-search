@@ -155,40 +155,17 @@ xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(
 
 " Customizations (blink, index, …) {{{1
 
-nno   <expr>   <plug>(ms_view)    search#view()
+nno  <expr> <silent> <plug>(ms_view)    search#view()
 
-nno            <plug>(ms_blink)   :<c-u>call search#blink()<cr>
-nno            <plug>(ms_index)   :<c-u>call search#index()<cr>
-nno            <plug>(ms_nohls)   :<c-u>call timer_start(0, { -> execute('call search#nohls()') })<cr>
-"                                              │
-" We can't invoke `search#nohls()` immediately, because it would install
-" the autocmd disabling 'hls' too soon. 'hls' would be enabled then disabled
-" immediately after every `n` motion.
-"
-" NOTE:
-" For some reason, this problem occurs only if the `matchparen` plugin
-" is disabled, and we're in a buffer where the value of 'conceallevel' is
-" 0 (ex: markdown).
-"
-" More precisely, only if we delete a specific autocmd:
-"
-"         au! matchparen CursorMoved
-"
-" NOTE:
-" If we used `<expr>`, we wouldn't need the timer.
-" It seems `<expr>` would delay the processing of `nohls()`.
-"
-" FIXME:
-" `<plug>(ms_blink)`, `<plug>(ms_index)`, `<plug>(ms_view)`
-" all seem to be processed after the motion, even when `matchparen` is disabled.
-" Why `<plug>(ms_nohls)` is an exception?
-
+nno  <silent>  <plug>(ms_blink)   :<c-u>call search#blink()<cr>
+nno  <silent>  <plug>(ms_index)   :<c-u>call search#index()<cr>
+nno  <silent>  <plug>(ms_nohls)   :<c-u>call search#nohls()<cr>
 
 " Regroup all customizations behind `<plug>(ms_custom)`
-"                                ┌─ install a fire-once autocmd to disable 'hls' when we move
-"                                │               ┌─ unfold if needed, restore the view after `*` &friends
-"                                │               │
-nmap <plug>(ms_custom)    <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
+"                                       ┌─ install a fire-once autocmd to disable 'hls' when we move
+"                                       │               ┌─ unfold if needed, restore the view after `*` &friends
+"                                       │               │
+nmap <silent> <plug>(ms_custom)  <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
 "                                                               │               │
 "                                  make the current match blink ┘               │
 "                                               print `[12/34]` kind of message ┘
@@ -207,7 +184,7 @@ nmap <plug>(ms_custom)    <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(
 " Why don't we disable `<plug>(ms_nohls)`?
 " Because, the search in `c /pattern cr` has enabled 'hls', so we need
 " to disable it.
-ino   <plug>(ms_nohls)   <c-r>=search#nohls_on_leave()<cr>
-ino   <plug>(ms_index)   <nop>
-ino   <plug>(ms_blink)   <nop>
-ino   <plug>(ms_view)    <nop>
+ino <silent>  <plug>(ms_nohls)  <c-r>=search#nohls_on_leave()<cr>
+ino <silent>  <plug>(ms_index)  <nop>
+ino <silent>  <plug>(ms_blink)  <nop>
+ino <silent>  <plug>(ms_view)   <nop>
