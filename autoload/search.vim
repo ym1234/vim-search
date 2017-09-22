@@ -253,6 +253,13 @@ fu! s:cr_ex(line) abort
     elseif a:line =~# beginning.'h%[elp]\s+\S+z\)'.ending
         return "\<bs>\<bs>()\<cr>"
 
+    " enable the item in the statusline showing our position in the arglist
+    " after we execute an `:args` command
+    elseif a:line =~# beginning.'ar%[gs]\s+.*'.ending
+
+        call timer_start(0, { -> execute('let g:my_stl_list_position = 1 | redraw!') })
+        return "\<cr>"
+
     else
         " there's no infinite remapping (`:h recursive_mapping`):
         "
