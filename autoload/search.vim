@@ -255,7 +255,7 @@ fu! s:cr_ex(line) abort
 
     " enable the item in the statusline showing our position in the arglist
     " after we execute an `:args` command
-    elseif a:line =~# beginning.'ar%[gs]\s+'
+    elseif a:line =~# beginning.'%(tab\s+)?ar%[gs]\s+'
 
         call timer_start(0, { -> execute('let g:my_stl_list_position = 1 | redraw!') })
         return "\<cr>"
