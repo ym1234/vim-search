@@ -178,7 +178,7 @@ fu! s:cr_ex(line) abort
         return "\<cr>:"
 
     " ls
-    elseif a:line =~# beginning.'%(ls|buffers|files)'.ending
+    elseif a:line =~# beginning.'%(ls|buffers|files)!?'.ending
 
         return "\<cr>:b "
 
