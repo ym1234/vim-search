@@ -428,7 +428,10 @@ fu! s:matches_in_line() abort "{{{1
 endfu
 
 fu! s:matches_in_range(range) abort "{{{1
+    let marks_save = [ getpos("'["), getpos("']") ]
     let output = execute(a:range.'s///gen')
+    call setpos("'[", marks_save[0])
+    call setpos("']", marks_save[1])
     return str2nr(matchstr(output, '\d\+'))
 endfu
 
