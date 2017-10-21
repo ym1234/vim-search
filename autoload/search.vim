@@ -490,6 +490,12 @@ fu! search#wrap_star(seq) abort "{{{1
     " We need to temporarily disable our autocmd because it would badly interfere.
     let b:my_hls_after_slash_enabled = 0
 
+    " If we press * on nothing, it  raises E348 or E349, and Vim highlights last
+    " search pattern. But because of the error, Vim didn't finish processing the
+    " mapping.   Therefore, the  highlighting is  not cleared  when we  move the
+    " cursor. Make sure it is.
+    call timer_start(0, {-> execute('if v:errmsg[:4] =~# "\\vE%(348|349):" | call search#nohls() | endif')})
+
     return a:seq."\<plug>(ms_prev)"
     \.           "\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
     \.           "\<plug>(ms_reenable_autocmd)"
