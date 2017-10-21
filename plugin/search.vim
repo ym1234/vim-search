@@ -20,7 +20,34 @@ let g:loaded_mysearch = 1
 " Source:
 " https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
 
-" Disable unwanted recursivity {{{1
+" Autocmd {{{1
+
+augroup my_hls_after_slash
+    au!
+    "                    autocmd disabled when we do  / up cr c-o ┐
+    "                                                             │
+    au CmdLineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
+                   \|     call search#after_slash()
+                   \|     call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
+                   \|                                          call feedkeys("\<plug>(ms_nohls)", "i")
+                   \|                                          let v:errmsg = ""
+                   \|                                      endif')})
+                   \| endif
+
+    " Why the timer?{{{
+    "
+    " Open 2 windows with 2 buffers A and B.
+    " In A, search for a pattern which has a match in B but not in A.
+    " Move the cursor: the highlighting should be disabled in B, but it's not.
+    " This is because Vim stops processing a mapping as soon as an error occurs:
+    "
+    "         https://github.com/junegunn/vim-slash/issues/5
+    "         :h map-error
+"}}}
+augroup END
+
+" Mappings {{{1
+" Disable unwanted recursivity {{{2
 
 " We remap the following keys RECURSIVELY:
 "
@@ -37,13 +64,14 @@ let g:loaded_mysearch = 1
 " For anything else, remapping should be forbidden.
 " So, we install non-recursive mappings for various keys we may return in our wrappers.
 
-cno   <plug>(ms_cr)      <cr>
-nno   <plug>(ms_slash)   /
-nno   <plug>(ms_n)       n
-nno   <plug>(ms_N)       N
-nno   <plug>(ms_prev)    <c-o>
+cno  <plug>(ms_cr)      <cr>
+cno  <plug>(ms_up)      <up>
+nno  <plug>(ms_slash)   /
+nno  <plug>(ms_n)       n
+nno  <plug>(ms_N)       N
+nno  <plug>(ms_prev)    <c-o>
 
-" cr  gd  n {{{1
+" cr  gd  n {{{2
 
 " NOTE:
 " Don't add `<silent>` to the next mapping.
@@ -58,7 +86,6 @@ nno   <plug>(ms_prev)    <c-o>
 " Without `<silent>`, Vim behaves as expected:
 "     E486: Pattern not found: garbage
 
-cmap <expr> <cr> search#wrap_cr()
 augroup ms_cmdwin
   au!
   au CmdWinEnter * if getcmdwintype() =~ '[/?]'
@@ -78,21 +105,7 @@ nmap  <silent> <expr>  gD   search#wrap_gd(1)
 nmap  <silent> <expr>  n    search#wrap_n(0)
 nmap  <silent> <expr>  N    search#wrap_n(1)
 
-" FIXME: Search highlight is not cleared when there is no match
-"
-"         https://github.com/junegunn/vim-slash/issues/5
-"
-" Other problem (but same cause):
-"
-" Why isn't the highlighting not cleared when we move the cursor after hitting
-" `gd`? In fact, sometimes the hl is cleared and the cursor blinks, and
-" sometimes nothing.
-" I think nothing happens when `gd` fails (:h map-error), in this case Vim
-" stops processing the rest of the mapping.
-"
-" How to tell Vim to go on processing the mapping even though the beginning failed?
-
-" Star and friends {{{1
+" Star &friends {{{2
 
 " By default, you can search automatically for the word under the cursor with
 " * or #. But you can't do the same for the text visually selected.
@@ -109,14 +122,14 @@ nmap  <silent> <expr>  N    search#wrap_n(1)
 " between the current and the next word. It would be hard to get rid of it,
 " because we need to perform a search with `/` to be sure that 'smartcase'
 " is taken into account.
-nmap <silent> <expr>  *    search#wrap_star('*')
-"                          │
-"                          └─ * c-o
-"                             / up cr c-o
-"                             <plug>(ms_nohls)
-"                             <plug>(ms_view)  ⇔  <number> c-e / c-y
-"                             <plug>(ms_blink)
-"                             <plug>(ms_index)
+nmap <silent>  <expr>       *    search#wrap_star('*')
+"                                │
+"                                └─ * c-o
+"                                   / up cr c-o
+"                                   <plug>(ms_nohls)
+"                                   <plug>(ms_view)  ⇔  <number> c-e / c-y
+"                                   <plug>(ms_blink)
+"                                   <plug>(ms_index)
 
 nmap <silent> <expr>  #    search#wrap_star('#')
 nmap <silent> <expr>  g*   search#wrap_star('g*')
@@ -153,7 +166,11 @@ xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(
 
 xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
 
-" Customizations (blink, index, …) {{{1
+" Customizations (blink, index, …) {{{2
+
+" This mapping  is used in `search#wrap_star()` to reenable  our autocmd after a
+" search via star &friends.
+nno  <expr> <plug>(ms_reenable_autocmd) execute('unlet! b:my_hls_after_slash_enabled')
 
 nno  <expr> <silent> <plug>(ms_view)    search#view()
 
@@ -166,9 +183,9 @@ nno  <silent>  <plug>(ms_nohls)   :<c-u>call search#nohls()<cr>
 "                                       │               ┌─ unfold if needed, restore the view after `*` &friends
 "                                       │               │
 nmap <silent> <plug>(ms_custom)  <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
-"                                                               │               │
-"                                  make the current match blink ┘               │
-"                                               print `[12/34]` kind of message ┘
+"                                                                       │               │
+"                                          make the current match blink ┘               │
+"                                                       print `[12/34]` kind of message ┘
 
 
 " Without the next mappings, we face this issue:

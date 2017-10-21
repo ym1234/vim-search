@@ -3,6 +3,21 @@ if exists('g:auto_loaded_mysearch')
 endif
 let g:auto_loaded_mysearch = 1
 
+fu! search#after_slash() abort "{{{1
+    call s:set_hls()
+
+    " If we set 'lazyredraw', when we search a pattern absent from the buffer,
+    " the search command will be displayed, which gives:
+    "         - command
+    "         - error
+    "         - prompt
+    let lz = &lz
+    set nolazyredraw
+    call timer_start(0, {-> execute('set '.(lz ? '' : 'no').'lazyredraw')})
+
+    call feedkeys("\<plug>(ms_custom)", 'i')
+endfu
+
 " blink {{{1
 
 " `s:blink` must be initialized before defining the functions
@@ -144,129 +159,6 @@ fu! search#blink() abort
     call s:blink.delete()
     call s:blink.tick(0)
     return ''
-endfu
-
-" cr_ex {{{1
-
-" TODO:
-" Extract `s:cr_ex()`, which has nothing to do with the search, into
-" `myfuncs.vim`?
-"
-" Pb: if we ever change the name of the function, inside `myfuncs.vim`, we
-" would need to do the same in this file, when it's called from `wrap_cr()`.
-
-fu! s:cr_ex(line) abort
-    "                                  ┌─ we could add `\s*` but we don't,
-    "                                  │  so that we can execute the original
-    "                                  │  command by prefixing it with a space
-    "                                  │
-    let [ beginning, ending ] = [ '\v\C^', '\s*$' ]
-
-    " g//#
-    if a:line =~# beginning.'g.*#'.ending
-        " If we're on the Ex command line, it ends with a number sign, and we
-        " hit Enter, return the Enter key, and add a colon at the end of it.
-        "
-        " Why?
-        " Because `:#` is a command used to print lines with their addresses:
-        "     :g/pattern/#
-        "
-        " And, when it's executed, we probably want to jump to one of them, by
-        " typing its address on the command line:
-        "     https://gist.github.com/romainl/047aca21e338df7ccf771f96858edb86
-
-        return "\<cr>:"
-
-    " ls
-    elseif a:line =~# beginning.'%(ls|buffers|files)!?'.ending
-
-        return "\<cr>:b "
-
-    " ilist
-    elseif a:line =~# beginning.'%(d|i)l%[ist]\s+'
-
-        return "\<cr>:".matchstr(a:line, '\S').'j '
-
-    " clist
-    elseif a:line =~# beginning.'%(c|l)li%[st]'.ending
-
-        " allow Vim's pager to display the full contents of any command,
-        " even if it takes more than one screen; don't stop after the first
-        " screen to display the message:    -- More --
-        set nomore
-
-        " reset 'more' after the keys have been typed
-        call timer_start(0, { -> execute('set more') })
-
-        return "\<cr>:".repeat(matchstr(a:line, '\S'), 2).' '
-
-    " chistory
-    elseif a:line =~# beginning.'%(c|l)hi%[story]'.ending
-
-        set nomore
-        call timer_start(0, { -> execute('set more') })
-        return "\<cr>:sil ".matchstr(a:line, '\S').'older '
-
-    " oldfiles
-    elseif a:line =~# beginning.'old%[files]'.ending
-
-        set nomore
-        call timer_start(0, { -> execute('set more') })
-        return "\<cr>:e #<"
-
-    " changes
-    elseif a:line =~# beginning.'changes'.ending
-
-        set nomore
-        call timer_start(0, { -> execute('set more') })
-        " We don't return the keys directly, because S-left could be remapped
-        " to something else, leading to spurious bugs.
-        " We need to tell Vim to not remap it. We can't do that with `:return`.
-        " But we can do it with `feedkeys()` and the `n` flag.
-        call feedkeys("\<cr>:norm! g;\<s-left>", 'in')
-        return ''
-
-    " jumps
-    elseif a:line =~# beginning.'ju%[mps]'.ending
-
-        set nomore
-        call timer_start(0, { -> execute('set more') })
-        call feedkeys("\<cr>:norm! \<c-o>\<s-left>", 'in')
-        "                                              │
-        "                                              └─ don't remap C-o and S-left
-        return ''
-
-    " marks
-    elseif a:line =~# beginning.'marks'.ending
-
-        set nomore
-        call timer_start(0, { -> execute('set more') })
-        return "\<cr>:norm! `"
-
-    " when we copy a line of vimscript and paste it on the command line,
-    " sometimes the newline gets copied and translated into a literal CR,
-    " which raises an error:    remove it
-    elseif a:line[-1:-1] ==# "\<cr>"
-        return "\<bs>\<cr>"
-
-    " sometimes, we type `:h functionz)` instead of `:h function()`
-    elseif a:line =~# beginning.'h%[elp]\s+\S+z\)'.ending
-        return "\<bs>\<bs>()\<cr>"
-
-    " enable the item in the statusline showing our position in the arglist
-    " after we execute an `:args` command
-    elseif a:line =~# beginning.'%(tab\s+)?ar%[gs]\s+'
-
-        call timer_start(0, { -> execute('let g:my_stl_list_position = 1 | redraw!') })
-        return "\<cr>"
-
-    else
-        " there's no infinite remapping (`:h recursive_mapping`):
-        "
-        "         If the {rhs} starts with {lhs}, the first character is not
-        "         mapped again.
-        return "\<cr>"
-    endif
 endfu
 
 fu! search#escape(backward) abort "{{{1
@@ -429,7 +321,9 @@ endfu
 
 fu! s:matches_in_range(range) abort "{{{1
     let marks_save = [ getpos("'["), getpos("']") ]
-    let output = execute(a:range.'s///gen')
+    " `:keepj` prevents  us from  polluting the jumplist  (could matter  when we
+    " type `<plug>(ms_prev)`)
+    let output = execute('keepj '.a:range.'s///gen')
     call setpos("'[", marks_save[0])
     call setpos("']", marks_save[1])
     return str2nr(matchstr(output, '\d\+'))
@@ -493,7 +387,7 @@ fu! search#view() abort "{{{1
     " readable):
     "
     "     *<plug>(ms_prev)
-    "      <plug>(ms_slash)<up><plug>(ms_cr)<plug>(ms_prev)
+    "      <plug>(ms_slash)<plug>(ms_up)<plug>(ms_cr)<plug>(ms_prev)
     "      <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
     "
     " What's important to understand here, is that `view()` is called AFTER
@@ -527,42 +421,6 @@ fu! search#view() abort "{{{1
     endif
 
     return seq
-endfu
-
-fu! search#wrap_cr() abort "{{{1
-    let type = getcmdtype()
-
-    if type ==# ':'
-        return s:cr_ex(getcmdline())
-
-    elseif type =~# '[/?]'
-        call s:set_hls()
-
-        " If we set 'lazyredraw', when we search a pattern absent from the buffer,
-        " the search command will be displayed, which gives:
-        "         - command
-        "         - error
-        "         - prompt
-        let lz = &lz
-        set nolazyredraw
-        call timer_start(0, {-> execute('set '.(lz ? '' : 'no').'lazyredraw')})
-
-        "       ┌─ <plug>(ms_cr) isn't needed, because Vim doesn't remap a lhs
-        "       │  repeated at the beginning of a rhs (:h recursive_mapping)
-        "       │
-        return "\<cr>\<plug>(ms_custom)"
-
-    else
-        " Don't modify a `cr` if it's typed on a command line different than Ex or
-        " search. In particular, we don't want our custom `cr` to interfere with
-        " our completion plugin, when it types `cr` to validate an expression
-        " inside the expression register from insert mode:
-        "
-        "     i_c-r = … cr
-        "               │
-        "               └─ must be a regular `cr`, not a custom one
-        return "\<cr>"
-    endif
 endfu
 
 fu! search#wrap_gd(back) abort "{{{1
@@ -628,7 +486,12 @@ fu! search#wrap_star(seq) abort "{{{1
     " But we let the function do it again anyway, because it doesn't cause any issue.
     " If it causes an issue, we should test the current mode, and add the
     " keys on the last 2 lines only from normal mode.
+
+    " We need to temporarily disable our autocmd because it would badly interfere.
+    let b:my_hls_after_slash_enabled = 0
+
     return a:seq."\<plug>(ms_prev)"
-       \.        "\<plug>(ms_slash)\<up>\<plug>(ms_cr)\<plug>(ms_prev)"
-       \.        "\<plug>(ms_custom)"
+    \.           "\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
+    \.           "\<plug>(ms_reenable_autocmd)"
+    \.           "\<plug>(ms_custom)"
 endfu
