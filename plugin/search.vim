@@ -114,14 +114,6 @@ nmap  <silent> <expr>  N    search#wrap_n(1)
 "
 " `<silent>` is useful to avoid `/ pattern cr` to display a brief message on
 " the command line.
-"
-" FIXME:
-" If the next occurrence of the word under the cursor is not visible on the
-" screen (or its distance from the last line of the screen is < &scrolloff),
-" the latter will “flash“. That's because the cursor moves back and forth
-" between the current and the next word. It would be hard to get rid of it,
-" because we need to perform a search with `/` to be sure that 'smartcase'
-" is taken into account.
 nmap <silent>  <expr>       *    search#wrap_star('*')
 "                                │
 "                                └─ * c-o
