@@ -24,7 +24,6 @@ let g:loaded_mysearch = 1
 
 augroup my_hls_after_slash
     au!
-    au CmdLineEnter * if expand('<afile>') =~# '[/?]' | let b:my_errmsg_save = v:errmsg | endif
 
     "                    autocmd disabled when we do  / up cr c-o ┐
     "                                                             │
@@ -32,8 +31,6 @@ augroup my_hls_after_slash
                    \|     call search#after_slash()
                    \|     call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
                    \|                                          call feedkeys("\<plug>(ms_nohls)", "i")
-                   \|                                          let v:errmsg = b:my_errmsg_save
-                   \|                                          unlet! b:my_errmsg_save
                    \|                                      endif')})
                    \| endif
 
