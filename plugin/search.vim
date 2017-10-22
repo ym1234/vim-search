@@ -29,10 +29,10 @@ augroup my_hls_after_slash
     "                                                             │
     au CmdlineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
                    \|     if getcmdline() != ''
-                   \|         call search#after_slash()
                    \|         call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
                    \|                                              call feedkeys("\<plug>(ms_nohls)", "i")
                    \|                                          endif')})
+                   \|         call search#after_slash()
                    \|      endif
                    \| endif
 
@@ -45,6 +45,10 @@ augroup my_hls_after_slash
     "
     "         https://github.com/junegunn/vim-slash/issues/5
     "         :h map-error
+    "
+    " FIXME:
+    " If we press  `gd` on the 1st occurrence of a  keyword, the highlighting is
+    " still not disabled.
 "}}}
 augroup END
 
