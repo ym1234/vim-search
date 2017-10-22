@@ -161,8 +161,8 @@ fu! search#blink() abort
     return ''
 endfu
 
-fu! search#escape(backward) abort "{{{1
-    return '\V'.substitute(escape(@", '\'.(a:backward ? '?' : '/')), "\n", '\\n', 'g')
+fu! search#escape(fwd) abort "{{{1
+    return '\V'.substitute(escape(@", '\'.(a:fwd ? '?' : '/')), "\n", '\\n', 'g')
 endfu
 
 fu! search#index() abort "{{{1
@@ -423,21 +423,21 @@ fu! search#view() abort "{{{1
     return seq
 endfu
 
-fu! search#wrap_gd(back) abort "{{{1
+fu! search#wrap_gd(fwd) abort "{{{1
     call s:set_hls()
     " If we press `gd`  on the 1st occurrence of a  keyword, the highlighting is
     " still not disabled.
     call timer_start(0, {-> search#nohls()})
-    return (a:back ? 'gD' : 'gd')."\<plug>(ms_custom)"
+    return (a:fwd ? 'gd' : 'gD')."\<plug>(ms_custom)"
 endfu
 
-fu! search#wrap_n(back) abort "{{{1
+fu! search#wrap_n(fwd) abort "{{{1
     call s:set_hls()
 
     " We want `n` and `N` to move consistently no matter the direction of the
     " search `/`, or `?`.
     " toggle the value of `n`, `N` if necessary
-    let seq = (a:back ? 'nN' : 'Nn')[v:searchforward]
+    let seq = (a:fwd ? 'Nn' : 'nN')[v:searchforward]
 
     " If we change the value of `seq` (`n` to `N` or `N` to `n`), when we perform
     " a backward search we have the error:

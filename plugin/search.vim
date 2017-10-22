@@ -97,15 +97,15 @@ augroup END
 
 " I don't think `<silent>` is needed here, but we use it to stay consistent,
 " and who knows, it may be useful to sometimes avoid a brief message
-nmap  <silent> <expr>  gd   search#wrap_gd(0)
-nmap  <silent> <expr>  gD   search#wrap_gd(1)
+nmap  <silent> <expr>  gd   search#wrap_gd(1)
+nmap  <silent> <expr>  gD   search#wrap_gd(0)
 
 " `<silent>` is important: it prevents `n` and `N` to display their own message
 "
 " without `<silent>`, when our message (`pattern [12/34]`) is displayed,
 " it erases the previous one, and makes look like the command line is “flashing“
-nmap  <silent> <expr>  n    search#wrap_n(0)
-nmap  <silent> <expr>  N    search#wrap_n(1)
+nmap  <silent> <expr>  n    search#wrap_n(1)
+nmap  <silent> <expr>  N    search#wrap_n(0)
 
 " Star &friends {{{2
 
@@ -152,13 +152,13 @@ nmap <silent> <expr>  g#   search#wrap_star('g#')
 "              │                 │┌─ search for
 "              │                 ││      ┌ insert an expression
 "              │                 ││┌─────┤
-xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
+xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
 "                                         └──────────────┤│             │
 "                                                        ││             └─ validate search
 "                                                        │└─ validate expression
 "                                                        └ escape unnamed register
 
-xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
+xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
 
 " Customizations (blink, index, …) {{{2
 
