@@ -425,6 +425,9 @@ endfu
 
 fu! search#wrap_gd(back) abort "{{{1
     call s:set_hls()
+    " If we press `gd`  on the 1st occurrence of a  keyword, the highlighting is
+    " still not disabled.
+    call timer_start(0, {-> search#nohls()})
     return (a:back ? 'gD' : 'gd')."\<plug>(ms_custom)"
 endfu
 

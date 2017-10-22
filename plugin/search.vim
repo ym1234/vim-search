@@ -45,10 +45,6 @@ augroup my_hls_after_slash
     "
     "         https://github.com/junegunn/vim-slash/issues/5
     "         :h map-error
-    "
-    " FIXME:
-    " If we press  `gd` on the 1st occurrence of a  keyword, the highlighting is
-    " still not disabled.
 "}}}
 augroup END
 
