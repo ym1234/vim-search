@@ -27,7 +27,7 @@ augroup my_hls_after_slash
 
     "                    autocmd disabled when we do  / up cr c-o ┐
     "                                                             │
-    au CmdLineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
+    au CmdlineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
                    \|     call search#after_slash()
                    \|     call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
                    \|                                          call feedkeys("\<plug>(ms_nohls)", "i")
