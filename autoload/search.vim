@@ -162,7 +162,7 @@ fu! search#blink() abort
 endfu
 
 fu! search#escape(fwd) abort "{{{1
-    return '\V'.substitute(escape(@", '\'.(a:fwd ? '?' : '/')), "\n", '\\n', 'g')
+    return '\V'.substitute(escape(@", '\'.(a:fwd ? '/' : '?')), "\n", '\\n', 'g')
 endfu
 
 fu! search#index() abort "{{{1
