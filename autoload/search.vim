@@ -414,10 +414,10 @@ fu! search#view() abort "{{{1
         " prefix the key with the right count (± `windiff`).
 
         let seq .= windiff > 0
-                \?     windiff."\<c-e>"
-                \: windiff < 0
-                \?     -windiff."\<c-y>"
-                \:     ''
+        \?             windiff."\<c-e>"
+        \:         windiff < 0
+        \?             -windiff."\<c-y>"
+        \:             ''
     endif
 
     return seq
