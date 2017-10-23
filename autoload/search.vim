@@ -500,7 +500,7 @@ fu! search#wrap_star(seq) abort "{{{1
     call timer_start(0, {-> execute('if v:errmsg[:4] =~# "\\vE%(348|349):" | call search#nohls() | endif')})
 
     return a:seq."\<plug>(ms_prev)"
-    \.           "\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
-    \.           "\<plug>(ms_reenable_autocmd)"
-    \.           "\<plug>(ms_custom)"
+    \           ."\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
+    \           ."\<plug>(ms_reenable_autocmd)"
+    \           ."\<plug>(ms_custom)"
 endfu
