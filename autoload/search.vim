@@ -334,6 +334,7 @@ fu! search#nohls() abort "{{{1
         au!
         au CursorMoved,CursorMovedI * set nohlsearch | au! my_search
     augroup END
+    return ''
 endfu
 
 " nohls_on_leave {{{1

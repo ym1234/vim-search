@@ -168,9 +168,11 @@ nno  <expr> <plug>(ms_reenable_autocmd) execute('unlet! b:my_hls_after_slash_ena
 
 nno  <expr> <silent> <plug>(ms_view)    search#view()
 
-nno  <silent>  <plug>(ms_blink)   :<c-u>call search#blink()<cr>
-nno  <silent>  <plug>(ms_index)   :<c-u>call search#index()<cr>
-nno  <silent>  <plug>(ms_nohls)   :<c-u>call search#nohls()<cr>
+nno  <expr> <silent> <plug>(ms_blink)   search#blink()
+nno  <expr> <silent> <plug>(ms_nohls)   search#nohls()
+nno         <silent> <plug>(ms_index)   :<c-u>call search#index()<cr>
+" We  can't use  <expr> to  invoke `search#index()`,  because in  the latter  we
+" perform a substitution, which is forbidden when the text is locked.
 
 " Regroup all customizations behind `<plug>(ms_custom)`
 "                                       ┌─ install a fire-once autocmd to disable 'hls' when we move
