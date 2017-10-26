@@ -167,8 +167,9 @@ endfu
 
 fu! search#index() abort "{{{1
     let [current, total] = s:matches_count()
-    " not necessary in Vim, but is in neovim
-    redraw
+    " If  the index  is  weirdly  displayed in  neovim,  either  make sure  that
+    " `lazyredraw` is disabled (it is by  default), or add `:redraw` right here,
+    " before the `:echo` statement.
     echo '['.current.'/'.total.'] '.@/
 endfu
 
