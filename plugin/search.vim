@@ -30,7 +30,7 @@ augroup my_hls_after_slash
     au CmdlineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
                    \|     if getcmdline() != ''
                    \|         call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
-                   \|                                              call feedkeys("\<plug>(ms_nohls)", "i")
+                   \|                                              call search#nohls()
                    \|                                          endif')})
                    \|         call search#after_slash()
                    \|      endif

@@ -456,6 +456,10 @@ fu! search#wrap_n(fwd) abort "{{{1
     " of `n` and `N`.
     let seq = (seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
 
+    call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
+                                  \|     call search#nohls()
+                                  \| endif')})
+
     return seq."\<plug>(ms_custom)"
 
     " Vim doesn't wait for everything to be expanded, before beginning typing.
