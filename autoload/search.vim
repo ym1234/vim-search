@@ -167,10 +167,13 @@ endfu
 
 fu! search#index() abort "{{{1
     let [current, total] = s:matches_count()
-    " If  the index  is  weirdly  displayed in  neovim,  either  make sure  that
-    " `lazyredraw` is disabled (it is by  default), or add `:redraw` right here,
-    " before the `:echo` statement.
-    echo '['.current.'/'.total.'] '.@/
+    " We  delay  the `:echo`,  otherwise  it's  automatically  erased in  a  Vim
+    " terminal buffer. Also, we  have come to the conclusion that,  to display a
+    " message from a function called from a mapping, RELIABLY in Vim and Neovim,
+    " we must avoid `<expr>`, and we must delay the `:echo`.
+    "
+    " For more info, see our mapping changing the lightness of the colorscheme.
+    call timer_start(0, {-> execute(printf('echo "[%s/%s] %s"', current, total, @/), '')})
 endfu
 
 " matches_above {{{1
