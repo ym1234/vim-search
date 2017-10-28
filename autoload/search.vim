@@ -173,7 +173,7 @@ fu! search#index() abort "{{{1
     " we must avoid `<expr>`, and we must delay the `:echo`.
     "
     " For more info, see our mapping changing the lightness of the colorscheme.
-    call timer_start(0, {-> execute(printf('echo "[%s/%s] %s"', current, total, @/), '')})
+    call timer_start(0, {-> execute(printf('echo ''[%s/%s] %s''', current, total, @/), '')})
 endfu
 
 " matches_above {{{1
