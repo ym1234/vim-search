@@ -191,12 +191,21 @@ fu! search#index() abort "{{{1
     " … because  when `printf()`  would replace the  %s item,  the surrounding
     " quotes around the  message would be removed, and  `string()` would receive
     " an  unquoted string  which  would often  cause  an error  (E121: Undefined
-    " variable).
+    " variable). The exact same thing happens here:
+    "
+    "       exe 'echo string('.msg.')'
     "
     " Remember:
-    " After a concatenation of strings, the quotes surrounding each of them are removed.
-    " This is why  we use `string()`: to  add a 2nd layer of  quotes, which will
-    " remain after the 1st layer has been removed.
+    " `printf('…%s…%s…')` is really equivalent to a concatenation of strings.
+    " That is,  after being  processed, the quotes  surrounding the  strings are
+    " REMOVED in both cases:
+    "
+    "       echo 'here is '.var
+    "     ⇔ echo printf('here is %s', var)
+    "
+    " This is why  we use `string()` (outside a `printf()`'s {fmt}):
+    " to add a  2nd layer of quotes,  which will remain after the  1st layer has
+    " been removed.
     "}}}
 endfu
 
