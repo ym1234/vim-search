@@ -167,13 +167,37 @@ endfu
 
 fu! search#index() abort "{{{1
     let [current, total] = s:matches_count()
+
     " We  delay  the `:echo`,  otherwise  it's  automatically  erased in  a  Vim
     " terminal buffer. Also, we  have come to the conclusion that,  to display a
     " message from a function called from a mapping, RELIABLY in Vim and Neovim,
     " we must avoid `<expr>`, and we must delay the `:echo`.
     "
     " For more info, see our mapping changing the lightness of the colorscheme.
-    call timer_start(0, {-> execute(printf('echo ''[%s/%s] %s''', current, total, @/), '')})
+
+    let msg = '['.current.'/'.total.'] '.@/
+    call timer_start(0, {-> execute('echo '.string(msg), '')})
+    " Do NOT use `printf()`:{{{
+    "
+    "         call timer_start(0, {-> execute(printf('echo ''[%s/%s] %s''', current, total, @/), '')})
+    "
+    " It would break when the search pattern contains a single quote.
+    " We need `string()` to take care of the message BEFORE passing it to `:echo`.
+    "
+    " And we couldn't include `string()` inside the format passed to `printf()`:
+    "
+    "         execute(printf('echo string(%s)', msg))
+    "
+    " … because  when `printf()`  would replace the  %s item,  the surrounding
+    " quotes around the  message would be removed, and  `string()` would receive
+    " an  unquoted string  which  would often  cause  an error  (E121: Undefined
+    " variable).
+    "
+    " Remember:
+    " After a concatenation of strings, the quotes surrounding each of them are removed.
+    " This is why  we use `string()`: to  add a 2nd layer of  quotes, which will
+    " remain after the 1st layer has been removed.
+    "}}}
 endfu
 
 " matches_above {{{1
