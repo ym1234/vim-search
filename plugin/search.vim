@@ -27,14 +27,24 @@ augroup my_hls_after_slash
     " If 'hls'  and 'is' are  set, then ALL  matches are highlighted  when we're
     " writing a regex.  Not just the next match. See `:h 'is`.
     " So, we make sure 'hls' is set when we enter a search command line.
-    au CmdlineEnter [/\?] call search#toggle_hls(1)
+    au CmdlineEnter /,\? call search#toggle_hls(1)
+    "               └──┤
+    "                  └ we could also write this:     [/\?]
+    "                    but it doesn't work on Windows:
+    "                    https://github.com/vim/vim/pull/2198#issuecomment-341131934
+    "
+    "                    Also, why escape the question mark?
+    "                    Because, in the pattern of an autocmd, it has a special meaning (any character).
+    "                    We want the literal meaning.
+    "
+    "                    The special meaning of `?` is preserved even in a collection.
 
     " I don't think it would cause an issue  if we changed the order of the next
     " 2 autocmds, but still, do NOT change the order.
     " This way, we're sure  to restore 'hls' in whatever state  it was before we
     " entered  the  search  command  line,  and THEN,  we  install  the  autocmd
     " disabling 'hls' after a motion.
-    au CmdlineLeave [/\?] call search#toggle_hls(0)
+    au CmdlineLeave /,\? call search#toggle_hls(0)
 
     "                    autocmd disabled when we do  / up cr c-o ┐
     "                                                             │
