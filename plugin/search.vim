@@ -24,6 +24,17 @@ let g:loaded_mysearch = 1
 
 augroup my_hls_after_slash
     au!
+    " If 'hls'  and 'is' are  set, then ALL  matches are highlighted  when we're
+    " writing a regex.  Not just the next match. See `:h 'is`.
+    " So, we make sure 'hls' is set when we enter a search command line.
+    au CmdlineEnter [/\?] call search#toggle_hls(1)
+
+    " I don't think it would cause an issue  if we changed the order of the next
+    " 2 autocmds, but still, do NOT change the order.
+    " This way, we're sure  to restore 'hls' in whatever state  it was before we
+    " entered  the  search  command  line,  and THEN,  we  install  the  autocmd
+    " disabling 'hls' after a motion.
+    au CmdlineLeave [/\?] call search#toggle_hls(0)
 
     "                    autocmd disabled when we do  / up cr c-o ┐
     "                                                             │

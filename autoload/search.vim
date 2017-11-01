@@ -404,6 +404,18 @@ fu! s:set_hls() abort "{{{1
     set hlsearch
 endfu
 
+fu! search#toggle_hls(on_enter) abort "{{{1
+    if a:on_enter
+        let s:hls_on = &hls
+        set hls
+    else
+        if exists('s:hls_on')
+            exe 'set '.(s:hls_on ? '' : 'no').'hls'
+            unlet! s:hls_on
+        endif
+    endif
+endfu
+
 fu! search#view() abort "{{{1
 " make a nice view, by opening folds if any, and by restoring the view if
 " it changed but we wanted to stay where we were (happens with `*` and friends)
