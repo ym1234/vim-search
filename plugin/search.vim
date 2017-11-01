@@ -33,11 +33,35 @@ augroup my_hls_after_slash
     "                    but it doesn't work on Windows:
     "                    https://github.com/vim/vim/pull/2198#issuecomment-341131934
     "
-    "                    Also, why escape the question mark?
-    "                    Because, in the pattern of an autocmd, it has a special meaning (any character).
-    "                    We want the literal meaning.
+    "                    Also, why escape the question mark? {{{
+    "                    Because, in the pattern of an autocmd, it has a special meaning:
     "
-    "                    The special meaning of `?` is preserved even in a collection.
+    "                            any character (:h file-pattern)
+    "
+    "                    We want the literal meaning, to only match a backward search command line.
+    "                    Not all the others (:h cmdwin-char).
+    "
+    "                    Inside a collection, it seems `?` doesn't work (no meaning).
+    "                    To make some tests, use this snippet:
+    "
+    "                            augroup test_pattern
+    "                                au!
+    "                                "         ✔
+    "                                               ┌─ it probably works because the pattern
+    "                                               │  is supposed to be a single character,
+    "                                               │  so Vim interprets `?` literally, when it's alone
+    "                                               │
+    "                                au CmdWinEnter ?     nno <buffer> cd :echo 'hello'<cr>
+    "                                au CmdWinEnter \?    nno <buffer> cd :echo 'hello'<cr>
+    "                                au CmdWinEnter /,\?  nno <buffer> cd :echo 'hello'<cr>
+    "                                au CmdWinEnter [/\?] nno <buffer> cd :echo 'hello'<cr>
+
+    "                                "         ✘ (match any command line)
+    "                                au CmdWinEnter /,?   nno <buffer> cd :echo 'hello'<cr>
+    "                                "         ✘ (only / is affected)
+    "                                au CmdWinEnter [/?]  nno <buffer> cd :echo 'hello'<cr>
+    "                            augroup END
+"}}}
 
     " I don't think it would cause an issue  if we changed the order of the next
     " 2 autocmds, but still, do NOT change the order.
