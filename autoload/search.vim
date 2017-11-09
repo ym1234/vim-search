@@ -209,6 +209,7 @@ fu! search#index() abort "{{{1
     "}}}
 endfu
 
+
 " matches_above {{{1
 
 " Efficiently recalculate number of matches above current line using values
@@ -449,7 +450,6 @@ fu! search#view() abort "{{{1
     " … to compute the number of times we have to hit `C-e` or `C-y` to
     " position the current line in the window, so that the state of the window
     " is restored as it was before we hit `*`.
-
     "}}}
 
     if exists('s:winline')
