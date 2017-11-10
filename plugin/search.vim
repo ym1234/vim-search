@@ -66,7 +66,7 @@ augroup my_hls_after_slash
     " Restore the state of 'hls', then invoke `after_slash()`.
     " And if the search has just failed, invoke `nohls()` to disable 'hls'.
     au CmdlineLeave /,\? call search#toggle_hls('restore')
-                      \| if getcmdline() != '' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
+                      \| if getcmdline() != '' && get(b:, 'my_after_slash_enabled', 1) == 1
                       \|     call search#after_slash()
                       \|     call timer_start(0, {-> v:errmsg[:4] ==# 'E486' ? search#nohls() : ''})
                       \| endif
@@ -208,7 +208,7 @@ xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(
 
 " This mapping  is used in `search#wrap_star()` to reenable  our autocmd after a
 " search via star &friends.
-nno  <expr> <plug>(ms_re-enable_after_slash) execute('unlet! b:my_hls_after_slash_enabled')
+nno  <expr> <plug>(ms_re-enable_after_slash) execute('unlet! b:my_after_slash_enabled')
 
 nno  <expr> <silent> <plug>(ms_view)    search#view()
 

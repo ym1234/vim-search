@@ -532,6 +532,25 @@ fu! search#wrap_star(seq) abort "{{{1
 
     call s:set_hls()
 
+    " We have an autocmd which invokes  `after_slash()` when we leave the search
+    " command-line.  It needs to be to  temporarily disabled while we type `/ up
+    " cr`, otherwise it would badly interfere.
+    let b:my_after_slash_enabled = 0
+
+    " If we press * on nothing, it  raises E348 or E349, and Vim highlights last
+    " search pattern. But because of the error, Vim didn't finish processing the
+    " mapping.   Therefore, the  highlighting is  not cleared  when we  move the
+    " cursor. Make sure it is.
+    "
+    " Also, make sure to re-enable the invokation of `after_slash()` after a `/`
+    " search.
+    call timer_start(0, { -> v:errmsg[:4] =~# '\vE%(348|349):'
+    \                      ?       search#nohls()
+    \                            + execute('let b:my_after_slash_enabled = 1')
+    \                      :       '' })
+
+    " Why     `\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)…`?{{{
+    "
     " By default `*` is stupid, it ignores 'smartcase'.
     " To workaround this issue, we type this:
     "         / up cr c-o
@@ -543,22 +562,7 @@ fu! search#wrap_star(seq) abort "{{{1
     " But we let the function do it again anyway, because it doesn't cause any issue.
     " If it causes an issue, we should test the current mode, and add the
     " keys on the last 2 lines only from normal mode.
-
-    " We need to temporarily disable our autocmd because it would badly interfere.
-    let b:my_hls_after_slash_enabled = 0
-
-    " If we press * on nothing, it  raises E348 or E349, and Vim highlights last
-    " search pattern. But because of the error, Vim didn't finish processing the
-    " mapping.   Therefore, the  highlighting is  not cleared  when we  move the
-    " cursor. Make sure it is.
-    "
-    " Also, make sure to re-enable the invokation of `after_slash()` after a `/`
-    " search.
-    call timer_start(0, { -> v:errmsg[:4] =~# '\vE%(348|349):'
-    \                      ?       search#nohls()
-    \                            + execute('let b:my_hls_after_slash_enabled = 1')
-    \                      :       '' })
-
+"}}}
     return a:seq."\<plug>(ms_prev)"
     \           ."\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
     \           ."\<plug>(ms_re-enable_after_slash)"
