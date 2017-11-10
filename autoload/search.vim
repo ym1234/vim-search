@@ -413,14 +413,6 @@ fu! search#toggle_hls(action) abort "{{{1
         set hls
     else
         if exists('s:hls_on')
-            " FIXME:{{{
-            "
-            "     1. Press `*` on an empty line.
-            "     2. Search sth (/pat).
-            "             → no hl
-            "
-            " There's no hl until we perform a working `*` search.
-"}}}
             exe 'set '.(s:hls_on ? '' : 'no').'hls'
             unlet! s:hls_on
         endif
@@ -559,10 +551,16 @@ fu! search#wrap_star(seq) abort "{{{1
     " search pattern. But because of the error, Vim didn't finish processing the
     " mapping.   Therefore, the  highlighting is  not cleared  when we  move the
     " cursor. Make sure it is.
-    call timer_start(0, { -> v:errmsg[:4] =~# '\vE%(348|349):' ? search#nohls() : '' })
+    "
+    " Also, make sure to re-enable the invokation of `after_slash()` after a `/`
+    " search.
+    call timer_start(0, { -> v:errmsg[:4] =~# '\vE%(348|349):'
+    \                      ?       search#nohls()
+    \                            + execute('let b:my_hls_after_slash_enabled = 1')
+    \                      :       '' })
 
     return a:seq."\<plug>(ms_prev)"
     \           ."\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)\<plug>(ms_prev)"
-    \           ."\<plug>(ms_reenable_autocmd)"
+    \           ."\<plug>(ms_re-enable_after_slash)"
     \           ."\<plug>(ms_custom)"
 endfu

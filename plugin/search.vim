@@ -20,7 +20,7 @@ let g:loaded_mysearch = 1
 " Source:
 " https://github.com/google/vim-searchindex/blob/master/plugin/searchindex.vim
 
-" Autocmd {{{1
+" Autocmds {{{1
 
 augroup my_hls_after_slash
     au!
@@ -208,7 +208,7 @@ xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(
 
 " This mapping  is used in `search#wrap_star()` to reenable  our autocmd after a
 " search via star &friends.
-nno  <expr> <plug>(ms_reenable_autocmd) execute('unlet! b:my_hls_after_slash_enabled')
+nno  <expr> <plug>(ms_re-enable_after_slash) execute('unlet! b:my_hls_after_slash_enabled')
 
 nno  <expr> <silent> <plug>(ms_view)    search#view()
 
