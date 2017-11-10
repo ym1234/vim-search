@@ -6,14 +6,16 @@ let g:auto_loaded_mysearch = 1
 fu! search#after_slash() abort "{{{1
     call s:set_hls()
 
-    " If we set 'lazyredraw', when we search a pattern absent from the buffer,
+    " If we set 'lazyredraw', when we search a pattern absent from the buffer,{{{
     " the search command will be displayed, which gives:
-    "         - command
-    "         - error
-    "         - prompt
-    let lz = &lz
+    "
+    "         • command
+    "         • error
+    "         • prompt
+"}}}
+    let lz_save = &lz
     set nolazyredraw
-    call timer_start(0, {-> execute('set '.(lz ? '' : 'no').'lazyredraw')})
+    call timer_start(0, {-> execute('set '.(lz_save ? '' : 'no').'lazyredraw')})
 
     call feedkeys("\<plug>(ms_custom)", 'i')
 endfu
@@ -411,6 +413,14 @@ fu! search#toggle_hls(on_enter) abort "{{{1
         set hls
     else
         if exists('s:hls_on')
+            " FIXME:{{{
+            "
+            "     1. Press `*` on an empty line.
+            "     2. Search sth (/pat).
+            "             → no hl
+            "
+            " There's no hl until we perform a working `*` search.
+"}}}
             exe 'set '.(s:hls_on ? '' : 'no').'hls'
             unlet! s:hls_on
         endif
@@ -504,9 +514,7 @@ fu! search#wrap_n(fwd) abort "{{{1
     " of `n` and `N`.
     let seq = (seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
 
-    call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
-                                  \|     call search#nohls()
-                                  \| endif')})
+    call timer_start(0, {-> v:errmsg[:4] ==# 'E486:' ? search#nohls() : '' })
 
     return seq."\<plug>(ms_custom)"
 

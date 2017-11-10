@@ -63,25 +63,19 @@ augroup my_hls_after_slash
     "                            augroup END
 "}}}
 
-    " I don't think it would cause an issue  if we changed the order of the next
-    " 2 autocmds, but still, do NOT change the order.
-    " This way, we're sure  to restore 'hls' in whatever state  it was before we
-    " entered  the  search  command  line,  and THEN,  we  install  the  autocmd
-    " disabling 'hls' after a motion.
+    " Restore the state of 'hls', then invoke `after_slash()`.
+    " And if the search has just failed, invoke `nohls()` to disable 'hls'.
     au CmdlineLeave /,\? call search#toggle_hls(0)
+                      \| if getcmdline() != '' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
+                      \|     call search#after_slash()
+                      \|     call timer_start(0, {-> v:errmsg[:4] ==# 'E486' ? search#nohls() : ''})
+                      \| endif
 
-    "                    autocmd disabled when we do  / up cr c-o ┐
-    "                                                             │
-    au CmdlineLeave * if expand('<afile>') =~# '[/?]' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
-                   \|     if getcmdline() != ''
-                   \|         call timer_start(0, {-> execute('if v:errmsg[:4] ==# "E486:"
-                   \|                                              call search#nohls()
-                   \|                                          endif')})
-                   \|         call search#after_slash()
-                   \|      endif
-                   \| endif
-
-    " Why the timer?{{{
+    " Why `get(b:, …, 1) == 1`?{{{
+    "
+    " To disable this part of the autocmd when we do `/ up cr c-o`.
+    "}}}
+    " Why `if v:errmsg…` ?{{{
     "
     " Open 2 windows with 2 buffers A and B.
     " In A, search for a pattern which has a match in B but not in A.
@@ -91,6 +85,11 @@ augroup my_hls_after_slash
     "         https://github.com/junegunn/vim-slash/issues/5
     "         :h map-error
 "}}}
+    " Why the timer?{{{
+    "
+    " Because we haven't performed the search yet.
+    " CmdlineLeave is fired just before.
+    "}}}
 augroup END
 
 " Mappings {{{1
