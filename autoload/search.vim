@@ -20,6 +20,14 @@ fu! search#after_slash() abort "{{{1
     call feedkeys("\<plug>(ms_custom)", 'i')
 endfu
 
+fu! search#after_slash_status(...) abort "{{{1
+    if a:0
+        unlet! s:after_slash
+        return ''
+    endif
+    return get(s:, 'after_slash', 1)
+endfu
+
 " blink {{{1
 
 " `s:blink` must be initialized before defining the functions
@@ -535,7 +543,7 @@ fu! search#wrap_star(seq) abort "{{{1
     " We have an autocmd which invokes  `after_slash()` when we leave the search
     " command-line.  It needs to be to  temporarily disabled while we type `/ up
     " cr`, otherwise it would badly interfere.
-    let b:my_after_slash_enabled = 0
+    let s:after_slash = 0
 
     " If we press * on nothing, it  raises E348 or E349, and Vim highlights last
     " search pattern. But because of the error, Vim didn't finish processing the
@@ -546,7 +554,7 @@ fu! search#wrap_star(seq) abort "{{{1
     " search.
     call timer_start(0, { -> v:errmsg[:4] =~# '\vE%(348|349):'
     \                      ?       search#nohls()
-    \                            + execute('let b:my_after_slash_enabled = 1')
+    \                            + execute('let s:after_slash = 1')
     \                      :       '' })
 
     " Why     `\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)…`?{{{
