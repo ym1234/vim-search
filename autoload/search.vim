@@ -407,8 +407,8 @@ fu! s:set_hls() abort "{{{1
     set hlsearch
 endfu
 
-fu! search#toggle_hls(on_enter) abort "{{{1
-    if a:on_enter
+fu! search#toggle_hls(action) abort "{{{1
+    if a:action ==# 'save'
         let s:hls_on = &hls
         set hls
     else

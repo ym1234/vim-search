@@ -27,7 +27,7 @@ augroup my_hls_after_slash
     " If 'hls'  and 'is' are  set, then ALL  matches are highlighted  when we're
     " writing a regex.  Not just the next match. See `:h 'is`.
     " So, we make sure 'hls' is set when we enter a search command line.
-    au CmdlineEnter /,\? call search#toggle_hls(1)
+    au CmdlineEnter /,\? call search#toggle_hls('save')
     "               └──┤
     "                  └ we could also write this:     [/\?]
     "                    but it doesn't work on Windows:
@@ -65,7 +65,7 @@ augroup my_hls_after_slash
 
     " Restore the state of 'hls', then invoke `after_slash()`.
     " And if the search has just failed, invoke `nohls()` to disable 'hls'.
-    au CmdlineLeave /,\? call search#toggle_hls(0)
+    au CmdlineLeave /,\? call search#toggle_hls('restore')
                       \| if getcmdline() != '' && get(b:, 'my_hls_after_slash_enabled', 1) == 1
                       \|     call search#after_slash()
                       \|     call timer_start(0, {-> v:errmsg[:4] ==# 'E486' ? search#nohls() : ''})
@@ -75,7 +75,7 @@ augroup my_hls_after_slash
     "
     " To disable this part of the autocmd when we do `/ up cr c-o`.
     "}}}
-    " Why `if v:errmsg…` ?{{{
+    " Why `v:errmsg…` ?{{{
     "
     " Open 2 windows with 2 buffers A and B.
     " In A, search for a pattern which has a match in B but not in A.
