@@ -149,9 +149,9 @@ fu! s:blink.tick(_) abort
     endif
 endfu
 
-" This function is a routine (it changes the state of the buffer), but we also
-" use it for its output.
-" In `s:blink.tick()`, we test the latter to decide whether we should create a match.
+" This function  has side-effects (it changes  the state of the  buffer), but we
+" also use it for its output.  In `s:blink.tick()`, we test the latter to decide
+" whether we should create a match.
 fu! s:blink.delete() abort
     if exists('w:blink_id')
         call matchdelete(w:blink_id)
