@@ -172,23 +172,12 @@ nmap <silent>  <expr>       *    search#wrap_star('*')
 nmap <silent> <expr>  #    search#wrap_star('#')
 nmap <silent> <expr>  g*   search#wrap_star('g*')
 nmap <silent> <expr>  g#   search#wrap_star('g#')
-
-" NOTE:
-"
+" Why don't we implement `g*` and `g#` mappings?{{{
 " If we search a visual selection, we probably don't want to add the anchors:
 "         \< \>
 "
 " So our implementation of `v_*` and `v_#` don't add them.
-" And thus, we don't need to implement `g*` and `g#` mappings.
-
-" NOTE:
-"
-" `search#escape()` escapes special characters that may be present inside the
-" search register. But it needs to know in which direction we're searching.
-" Because if we search forward, then `/` is special. But if we search
-" backward, it's `?` which is special, not `/`.
-" That's why we pass a numerical argument to it (0 or 1).
-" It stands for the direction.
+"}}}
 
 "              ┌ just append keys at the end to add some fancy features
 "              │
@@ -203,6 +192,10 @@ xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(
 "                                                        └ escape unnamed register
 
 xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
+"                                                       │
+"                                                       └─ direction of the search
+"                                                          necessary to know which character among [/?]
+"                                                          is special, and needs to be escaped
 
 " Customizations (blink, index, …) {{{2
 
