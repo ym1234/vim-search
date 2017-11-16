@@ -149,7 +149,7 @@ fu! s:blink.tick(_) abort
     endif
 endfu
 
-" This function  has side-effects (it changes  the state of the  buffer), but we
+" This function has  side effects (it changes  the state of the  buffer), but we
 " also use it for its output.  In `s:blink.tick()`, we test the latter to decide
 " whether we should create a match.
 fu! s:blink.delete() abort
