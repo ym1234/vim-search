@@ -238,3 +238,15 @@ ino <silent>  <plug>(ms_nohls)  <c-r>=search#nohls_on_leave()<cr>
 ino <silent>  <plug>(ms_index)  <nop>
 ino <silent>  <plug>(ms_blink)  <nop>
 ino <silent>  <plug>(ms_view)   <nop>
+
+" Options {{{1
+
+" ignore the case when searching for a pattern, containing only lowercase
+" characters
+set ignorecase
+
+" but don't ignore the case if it contains an uppercase character
+set smartcase
+
+" Incremental search
+set incsearch
