@@ -1,7 +1,7 @@
-if exists('g:auto_loaded_mysearch')
+if exists('g:autoloaded_mysearch')
     finish
 endif
-let g:auto_loaded_mysearch = 1
+let g:autoloaded_mysearch = 1
 
 fu! search#after_slash() abort "{{{1
     call s:set_hls()
