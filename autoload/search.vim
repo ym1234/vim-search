@@ -122,8 +122,13 @@ fu! s:blink.tick(_) abort
     "  │                 │            ┌─ the blinking is still active
     "  │                 │            │
     if !self.delete() && &hlsearch && active
-        "                                  1 list describing 1 position                 ┐
-        "                                  `matchaddpos()` can accept up to 8 positions │
+        "                                  1 list describing 1 “position”;              ┐
+        "                                 `matchaddpos()` can accept up to 8 positions; │
+        "                                  a position can match:                        │
+        "                                                                               │
+        "                                      • a whole line                           │
+        "                                      • a part of a line                       │
+        "                                      • a character                            │
         "                                          ┌────────────────────────────────────┤
         let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([0, col('.')-3]), 6 ]])
         "                                            │          │                     │
