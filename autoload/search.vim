@@ -130,7 +130,7 @@ fu! s:blink.tick(_) abort
         "                                      • a part of a line                       │
         "                                      • a character                            │
         "                                          ┌────────────────────────────────────┤
-        let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([0, col('.')-3]), 6 ]])
+        let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([1, col('.')-3]), 6 ]])
         "                                            │          │                     │
         "                                            │          │                     └ with a length of 6 bytes
         "                                            │          └ begin 3 bytes before cursor
