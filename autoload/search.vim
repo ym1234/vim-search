@@ -122,21 +122,14 @@ fu! s:blink.tick(_) abort
     "  │                 │            ┌─ the blinking is still active
     "  │                 │            │
     if !self.delete() && &hlsearch && active
-
-        " '\v%%%dl%%>%dc%%<%dc'
-        "    │    │     │
-        "    │    │     └─ '%<'.(col('.')+3).'c'      →    before    column    `col('.')+3`
-        "    │    └─ '%<'.max([0, col('.')-3]).'c'    →    after     column    `max(0, col('.')-3)`
-        "    └─ '%'.line('.').'l'                     →    on        line      `line('.')`
-
-        let w:blink_id = matchadd('IncSearch',
-                       \          printf(
-                       \                 '\v%%%dl%%>%dc%%<%dc',
-                       \                  line('.'),
-                       \                  max([0, col('.')-3]),
-                       \                  col('.')+3
-                       \                )
-                       \         )
+        "                                  1 list describing 1 position                 ┐
+        "                                  `matchaddpos()` can accept up to 8 positions │
+        "                                          ┌────────────────────────────────────┤
+        let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([0, col('.')-3]), 6 ]])
+        "                                            │          │                     │
+        "                                            │          │                     └ with a length of 6 bytes
+        "                                            │          └ begin 3 bytes before cursor
+        "                                            └ on the current line
     endif
 
     " if the blinking still has ticks to process, recall this function later
