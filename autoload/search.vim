@@ -129,6 +129,10 @@ fu! s:blink.tick(_) abort
         "                                      • a whole line                           │
         "                                      • a part of a line                       │
         "                                      • a character                            │
+        "                                                                               │
+        "                                  The column index starts from 1,              │
+        "                                  like with `col()`. Not from 0.               │
+        "                                                                               │
         "                                          ┌────────────────────────────────────┤
         let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([1, col('.')-3]), 6 ]])
         "                                            │          │                     │
