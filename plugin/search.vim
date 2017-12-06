@@ -141,15 +141,15 @@ augroup END
 
 " I don't think `<silent>` is needed here, but we use it to stay consistent,
 " and who knows, it may be useful to sometimes avoid a brief message
-nmap  <silent> <expr>  gd   search#wrap_gd(1)
-nmap  <silent> <expr>  gD   search#wrap_gd(0)
+nmap  <expr><silent><unique>  gd  search#wrap_gd(1)
+nmap  <expr><silent><unique>  gD  search#wrap_gd(0)
 
 " `<silent>` is important: it prevents `n` and `N` to display their own message
 "
 " without `<silent>`, when our message (`pattern [12/34]`) is displayed,
 " it erases the previous one, and makes look like the command line is “flashing“
-nmap  <silent> <expr>  n    search#wrap_n(1)
-nmap  <silent> <expr>  N    search#wrap_n(0)
+nmap  <expr><silent><unique>  n  search#wrap_n(1)
+nmap  <expr><silent><unique>  N  search#wrap_n(0)
 
 " Star &friends {{{2
 
@@ -160,7 +160,7 @@ nmap  <silent> <expr>  N    search#wrap_n(0)
 "
 " `<silent>` is useful to avoid `/ pattern cr` to display a brief message on
 " the command line.
-nmap <silent>  <expr>       *    search#wrap_star('*')
+nmap  <expr><silent><unique>  *  search#wrap_star('*')
 "                                │
 "                                └─ * c-o
 "                                   / up cr c-o
@@ -169,9 +169,9 @@ nmap <silent>  <expr>       *    search#wrap_star('*')
 "                                   <plug>(ms_blink)
 "                                   <plug>(ms_index)
 
-nmap <silent> <expr>  #    search#wrap_star('#')
-nmap <silent> <expr>  g*   search#wrap_star('g*')
-nmap <silent> <expr>  g#   search#wrap_star('g#')
+nmap  <expr><silent><unique>  #   search#wrap_star('#')
+nmap  <expr><silent><unique>  g*  search#wrap_star('g*')
+nmap  <expr><silent><unique>  g#  search#wrap_star('g#')
 " Why don't we implement `g*` and `g#` mappings?{{{
 " If we search a visual selection, we probably don't want to add the anchors:
 "         \< \>
