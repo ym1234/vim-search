@@ -179,46 +179,46 @@ nmap  <expr><silent><unique>  g#  search#wrap_star('g#')
 " So our implementation of `v_*` and `v_#` don't add them.
 "}}}
 
-"              ┌ just append keys at the end to add some fancy features
-"              │
-"              │                 ┌─ copy visual selection
-"              │                 │┌─ search for
-"              │                 ││      ┌ insert an expression
-"              │                 ││┌─────┤
-xmap <expr> *  search#wrap_star("y/\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
-"                                         └──────────────┤│             │
-"                                                        ││             └─ validate search
-"                                                        │└─ validate expression
-"                                                        └ escape unnamed register
+"                        ┌ just append keys at the end to add some fancy features
+"                        │
+"                        │                 ┌─ copy visual selection
+"                        │                 │┌─ search for
+"                        │                 ││      ┌ insert an expression
+"                        │                 ││┌─────┤
+xmap  <expr><unique>  *  search#wrap_star("y/\<c-r>=search#escape(1)\<plug>(ms_cr)\<plug>(ms_cr)")
+"                                                   └──────────────┤│             │
+"                                                                  ││             └─ validate search
+"                                                                  │└─ validate expression
+"                                                                  └ escape unnamed register
 
-xmap <expr> #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
-"                                                       │
-"                                                       └─ direction of the search
-"                                                          necessary to know which character among [/?]
-"                                                          is special, and needs to be escaped
+xmap  <expr><unique>  #  search#wrap_star("y?\<c-r>=search#escape(0)\<plug>(ms_cr)\<plug>(ms_cr)")
+"                                                                 │
+"                                                                 └─ direction of the search
+"                                                                    necessary to know which character among [/?]
+"                                                                    is special, and needs to be escaped
 
 " Customizations (blink, index, …) {{{2
 
 " This mapping  is used in `search#wrap_star()` to reenable  our autocmd after a
 " search via star &friends.
-nno  <expr> <plug>(ms_re-enable_after_slash) search#after_slash_status('delete')
+nno  <expr>          <plug>(ms_re-enable_after_slash)  search#after_slash_status('delete')
 
-nno  <expr> <silent> <plug>(ms_view)    search#view()
+nno  <expr><silent>  <plug>(ms_view)   search#view()
 
-nno  <expr> <silent> <plug>(ms_blink)   search#blink()
-nno  <expr> <silent> <plug>(ms_nohls)   search#nohls()
-nno         <silent> <plug>(ms_index)   :<c-u>call search#index()<cr>
+nno  <expr><silent>  <plug>(ms_blink)  search#blink()
+nno  <expr><silent>  <plug>(ms_nohls)  search#nohls()
+nno        <silent>  <plug>(ms_index)  :<c-u>call search#index()<cr>
 " We  can't use  <expr> to  invoke `search#index()`,  because in  the latter  we
 " perform a substitution, which is forbidden when the text is locked.
 
 " Regroup all customizations behind `<plug>(ms_custom)`
-"                                       ┌─ install a fire-once autocmd to disable 'hls' when we move
-"                                       │               ┌─ unfold if needed, restore the view after `*` &friends
-"                                       │               │
-nmap <silent> <plug>(ms_custom)  <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
-"                                                                       │               │
-"                                          make the current match blink ┘               │
-"                                                       print `[12/34]` kind of message ┘
+"                                         ┌─ install a fire-once autocmd to disable 'hls' when we move
+"                                         │               ┌─ unfold if needed, restore the view after `*` &friends
+"                                         │               │
+nmap  <silent>  <plug>(ms_custom)  <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)<plug>(ms_index)
+"                                                                         │               │
+"                                            make the current match blink ┘               │
+"                                                         print `[12/34]` kind of message ┘
 
 
 " Without the next mappings, we face this issue:
@@ -234,10 +234,10 @@ nmap <silent> <plug>(ms_custom)  <plug>(ms_nohls)<plug>(ms_view)<plug>(ms_blink)
 " Why don't we disable `<plug>(ms_nohls)`?
 " Because, the search in `c /pattern cr` has enabled 'hls', so we need
 " to disable it.
-ino <silent>  <plug>(ms_nohls)  <c-r>=search#nohls_on_leave()<cr>
-ino <silent>  <plug>(ms_index)  <nop>
-ino <silent>  <plug>(ms_blink)  <nop>
-ino <silent>  <plug>(ms_view)   <nop>
+ino  <silent>  <plug>(ms_nohls)  <c-r>=search#nohls_on_leave()<cr>
+ino  <silent>  <plug>(ms_index)  <nop>
+ino  <silent>  <plug>(ms_blink)  <nop>
+ino  <silent>  <plug>(ms_view)   <nop>
 
 " Options {{{1
 
