@@ -135,7 +135,7 @@ nno  <plug>(ms_prev)    <c-o>
 augroup ms_cmdwin
   au!
   au CmdWinEnter * if getcmdwintype() =~ '[/?]'
-                \|     nmap <buffer> <nowait> <cr> <cr><plug>(ms_index)
+                \|     nmap  <buffer><nowait>  <cr>  <cr><plug>(ms_index)
                 \| endif
 augroup END
 
