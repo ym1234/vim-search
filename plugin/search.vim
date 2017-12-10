@@ -1,7 +1,7 @@
-if exists('g:loaded_mysearch')
+if exists('g:loaded_search')
     finish
 endif
-let g:loaded_mysearch = 1
+let g:loaded_search = 1
 
 " Links {{{1
 
