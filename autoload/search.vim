@@ -23,149 +23,26 @@ fu! search#after_slash_status(...) abort "{{{1
     return get(s:, 'after_slash', 1)
 endfu
 
-" blink {{{1
+fu! search#blink() abort "{{{1
+    " every time `search#blink()` is called, we  must reset the keys `ticks` and
+    " `delay` in the dictionary `s:blink`
+    let [ s:blink.ticks, s:blink.delay ] = [ 4, 50 ]
 
-" `s:blink` must be initialized before defining the functions
-" `s:blink.tick()` and `s:blink.delete()`.
-let s:blink = { 'ticks': 4, 'delay': 50 }
-
-" What does `blink.tick()` do? {{{
-"
-" It cycles between installing and removing the highlighting:
-" If the initial numerical value of the variable `s:blink.ticks` is even,
-" here's what happens:
-"
-" ticks = 4   (immediately decremented)
-"         3 → install hl
-"         2 → remove hl (when evaluating `self.delete()`)
-"         1 → install hl
-"         0 → remove hl
-"
-" If it's odd:
-"
-" ticks = 5
-"         4 → install hl
-"         3 → remove hl
-"         2 → install hl
-"         1 → remove hl
-"         0 → don't do anything because inactive
-"
-"}}}
-
-"                ┌─ when `timer_start()` will call this function, it will send
-"                │  the timer ID
-"                │
-fu! s:blink.tick(_) abort
-    let self.ticks -= 1
-
-    let active = self.ticks > 0
-
-    " What does the next condition do? {{{
-    "
-    " PART1:
-    " We need the blinking to stop and not go on forever.
-    " 2 solutions:
-    "
-    "     1. use the 'repeat' option of the `timer_start()` function:
-    "
-    "         call timer_start(self.delay, self.tick, { 'repeat' : 6 })
-    "
-    "     2. decrement a counter every time `blink.tick()` is called
-    "
-    " We'll use the 2nd solution, because by adding the counter to the
-    " dictionary `s:blink`, we have a single object which includes the whole
-    " configuration of the blinking:
-    "
-    "     - how does it blink?                           s:blink.tick
-    "     - how many times does it blink?                s:blink.ticks
-    "     - how much time does it wait between 2 ticks?  s:blink.delay
-    "
-    " It gives us a consistent way to change the configuration of the blinking.
-    "
-    " This explains the `if active` part of the next condition.
-    "
-    " PART2:
-    " If we move the cursor right after the blinking has begun, we don't want
-    " the blinking to go on, because it would follow our cursor (look at the
-    " pattern passed to `matchadd()`). Although the effect is only visible if
-    " the delay between 2 ticks is big enough (ex: 500 ms).
-    "
-    " We need to stop the blinking if the cursor moves.
-    " How to detect that the cursor is moving?
-    " We already have an autocmd listening to the `CursorMoved` event.
-    " When our autocmd is fired, 'hlsearch' is disabled.
-    " So, if 'hlsearch' is disabled, we should stop the blinking.
-    "
-    " This explains the `if &hls` part of the next condition.
-    "
-    " PART3:
-    "
-    " For a blinking to occur, we need a condition which is satisfied only once
-    " out of twice.
-    " We could use the output of `blink.delete()` to know whether a hl has
-    " just been deleted. And in this case, we could decide to NOT re-install
-    " a hl immediately. Otherwise, re-install one.
-    "
-    " This explains the `if !self.delete()` part of the next condition.
-"}}}
-
-    "  (re-)install the hl if:
-    "
-    "  ┌─ try to delete the hl, and check we haven't been able to do so
-    "  │  if we have, we don't want to re-install a hl immediately (only next tick)
-    "  │                 ┌─ the cursor hasn't moved
-    "  │                 │            ┌─ the blinking is still active
-    "  │                 │            │
-    if !self.delete() && &hlsearch && active
-        "                                  1 list describing 1 “position”;              ┐
-        "                                 `matchaddpos()` can accept up to 8 positions; │
-        "                                  a position can match:                        │
-        "                                                                               │
-        "                                      • a whole line                           │
-        "                                      • a part of a line                       │
-        "                                      • a character                            │
-        "                                                                               │
-        "                                  The column index starts from 1,              │
-        "                                  like with `col()`. Not from 0.               │
-        "                                                                               │
-        "                                          ┌────────────────────────────────────┤
-        let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([1, col('.')-3]), 6 ]])
-        "                                            │          │                     │
-        "                                            │          │                     └ with a length of 6 bytes
-        "                                            │          └ begin 3 bytes before cursor
-        "                                            └ on the current line
-    endif
-
-    " if the blinking still has ticks to process, recall this function later
-    if active
-        " call `s:blink.tick()` (current function) after `s:blink.delay` ms
-        call timer_start(self.delay, self.tick)
-        "                            │
-        "                            └─ we need `self.key` to be evaluated as a key in a dictionary,
-        "                               whose value is a funcref, so don't put quotes around
-    endif
+    call s:blink.delete()
+    call s:blink.tick(0)
+    return ''
 endfu
 
-" This function has  side effects (it changes  the state of the  buffer), but we
-" also use it for its output.  In `s:blink.tick()`, we test the latter to decide
-" whether we should create a match.
-fu! s:blink.delete() abort
+fu! s:delete() abort dict "{{{1
+    " This function has  side effects (it changes  the state of the  buffer), but we
+    " also use it for its output.  In `s:blink.tick()`, we test the latter to decide
+    " whether we should create a match.
     if exists('w:blink_id')
         call matchdelete(w:blink_id)
         unlet w:blink_id
         return 1
     endif
     " no need to return 0, that's what a function does by default
-endfu
-
-fu! search#blink() abort
-    " every time `search#blink()` is called, we must reset the keys `ticks` and
-    " `delay` of the dictionary `s:blink`
-    let [ s:blink.ticks, s:blink.delay ] = [ 4, 50 ]
-
-    call s:blink.delete()
-    call s:blink.tick(0)
-    return ''
 endfu
 
 fu! search#escape(fwd) abort "{{{1
@@ -412,6 +289,142 @@ fu! s:set_hls() abort "{{{1
     set hlsearch
 endfu
 
+fu! s:tick(_) abort dict "{{{1
+"          │
+"          └ when `timer_start()` will call this function, it will send
+"            the timer ID
+
+    let self.ticks -= 1
+
+    let active = self.ticks > 0
+
+    " What does the next condition do? {{{
+    "
+    " PART1:
+    " We need the blinking to stop and not go on forever.
+    " 2 solutions:
+    "
+    "     1. use the 'repeat' option of the `timer_start()` function:
+    "
+    "         call timer_start(self.delay, self.tick, { 'repeat' : 6 })
+    "
+    "     2. decrement a counter every time `blink.tick()` is called
+    "
+    " We'll use the 2nd solution, because by adding the counter to the
+    " dictionary `s:blink`, we have a single object which includes the whole
+    " configuration of the blinking:
+    "
+    "     - how does it blink?                           s:blink.tick
+    "     - how many times does it blink?                s:blink.ticks
+    "     - how much time does it wait between 2 ticks?  s:blink.delay
+    "
+    " It gives us a consistent way to change the configuration of the blinking.
+    "
+    " This explains the `if active` part of the next condition.
+    "
+    " PART2:
+    " If we move the cursor right after the blinking has begun, we don't want
+    " the blinking to go on, because it would follow our cursor (look at the
+    " pattern passed to `matchadd()`). Although the effect is only visible if
+    " the delay between 2 ticks is big enough (ex: 500 ms).
+    "
+    " We need to stop the blinking if the cursor moves.
+    " How to detect that the cursor is moving?
+    " We already have an autocmd listening to the `CursorMoved` event.
+    " When our autocmd is fired, 'hlsearch' is disabled.
+    " So, if 'hlsearch' is disabled, we should stop the blinking.
+    "
+    " This explains the `if &hls` part of the next condition.
+    "
+    " PART3:
+    "
+    " For a blinking to occur, we need a condition which is satisfied only once
+    " out of twice.
+    " We could use the output of `blink.delete()` to know whether a hl has
+    " just been deleted. And in this case, we could decide to NOT re-install
+    " a hl immediately. Otherwise, re-install one.
+    "
+    " This explains the `if !self.delete()` part of the next condition.
+"}}}
+
+    "  (re-)install the hl if:
+    "
+    "  ┌─ try to delete the hl, and check we haven't been able to do so
+    "  │  if we have, we don't want to re-install a hl immediately (only next tick)
+    "  │                 ┌─ the cursor hasn't moved
+    "  │                 │            ┌─ the blinking is still active
+    "  │                 │            │
+    if !self.delete() && &hlsearch && active
+        "                                  1 list describing 1 “position”;              ┐
+        "                                 `matchaddpos()` can accept up to 8 positions; │
+        "                                  a position can match:                        │
+        "                                                                               │
+        "                                      • a whole line                           │
+        "                                      • a part of a line                       │
+        "                                      • a character                            │
+        "                                                                               │
+        "                                  The column index starts from 1,              │
+        "                                  like with `col()`. Not from 0.               │
+        "                                                                               │
+        "                                          ┌────────────────────────────────────┤
+        let w:blink_id = matchaddpos('IncSearch', [[ line('.'), max([1, col('.')-3]), 6 ]])
+        "                                            │          │                     │
+        "                                            │          │                     └ with a length of 6 bytes
+        "                                            │          └ begin 3 bytes before cursor
+        "                                            └ on the current line
+    endif
+
+    " if the blinking still has ticks to process, recall this function later
+    if active
+        " call `s:blink.tick()` (current function) after `s:blink.delay` ms
+        call timer_start(self.delay, self.tick)
+        "                            │
+        "                            └─ we need `self.key` to be evaluated as a key in a dictionary,
+        "                               whose value is a funcref, so don't put quotes around
+    endif
+endfu
+" What does `s:tick()` do? {{{
+"
+" It cycles between installing and removing the highlighting:
+" If the initial numerical value of the variable `s:blink.ticks` is even,
+" here's what happens:
+"
+" ticks = 4   (immediately decremented)
+"         3 → install hl
+"         2 → remove hl (when evaluating `self.delete()`)
+"         1 → install hl
+"         0 → remove hl
+"
+" If it's odd:
+"
+" ticks = 5
+"         4 → install hl
+"         3 → remove hl
+"         2 → install hl
+"         1 → remove hl
+"         0 → don't do anything because inactive
+"
+"}}}
+" DON'T make this function anonymous!{{{
+"
+" Originally, junegunn wrote this function as an anonymous one:
+"
+"         fu! s:blink.tick()
+"             …
+"         endfu
+"
+" It works, but debugging an anonymous function is hard. In particular,
+" our `:WTF` command can't show us the location of the error.
+" For more info:
+"
+"     https://github.com/LucHermitte/lh-vim-lib/blob/master/doc/OO.md
+"
+" Instead, we give it a proper name, and at the end of the script, we assign its
+" funref to `s:blink.tick`.
+"
+" Same remark for `s:delete()`. Don't make it anonymous.
+"}}}
+
 fu! search#toggle_hls(action) abort "{{{1
     if a:action ==# 'save'
         let s:hls_on = &hls
@@ -573,3 +586,11 @@ fu! search#wrap_star(seq) abort "{{{1
     \           ."\<plug>(ms_re-enable_after_slash)"
     \           ."\<plug>(ms_custom)"
 endfu
+
+" Variable {{{1
+
+" `s:blink` must be initialized AFTER defining the functions
+" `s:tick()` and `s:delete()`.
+let s:blink = { 'ticks': 4, 'delay': 50 }
+let s:blink.tick   = function('s:tick')
+let s:blink.delete = function('s:delete')
