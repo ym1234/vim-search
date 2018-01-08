@@ -544,6 +544,13 @@ fu! search#wrap_n(is_fwd) abort "{{{1
 endfu
 
 fu! search#wrap_star(seq) abort "{{{1
+    " if the function is invoked from visual mode, it will copy the visual selection,
+    " because `a:seq` begins with the key `y`;
+    " in this case, we save the unnamed register to restore it later
+    if index(['v', 'V', "\<c-v>"], mode()) >= 0
+        let reg_save = [getreg('"'), getregtype('"')]
+    endif
+
     " `winline()` returns the position of the current line from the top line of
     " the window. The position / index of the latter is 1.
     let s:winline = winline()
@@ -566,6 +573,11 @@ fu! search#wrap_star(seq) abort "{{{1
     \                      ?       search#nohls()
     \                            + execute('let s:after_slash = 1')
     \                      :       '' })
+
+    " restore unnamed register if we've altered it
+    if exists('reg_save')
+        call timer_start(0, { -> setreg('"', reg_save[0], reg_save[1])})
+    endif
 
     " Why     `\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)…`?{{{
     "
