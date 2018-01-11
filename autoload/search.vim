@@ -1,3 +1,8 @@
+if exists('g:autoloaded_search')
+    finish
+endif
+let g:autoloaded_search = 1
+
 fu! search#after_slash() abort "{{{1
     call s:set_hls()
 
@@ -599,7 +604,7 @@ fu! search#wrap_star(seq) abort "{{{1
     \           ."\<plug>(ms_custom)"
 endfu
 
-" Variable {{{1
+" Variables {{{1
 
 " `s:blink` must be initialized AFTER defining the functions
 " `s:tick()` and `s:delete()`.
