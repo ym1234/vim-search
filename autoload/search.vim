@@ -553,7 +553,7 @@ fu! search#wrap_star(seq) abort "{{{1
     " because `a:seq` begins with the key `y`;
     " in this case, we save the unnamed register to restore it later
     if index(['v', 'V', "\<c-v>"], mode()) >= 0
-        let reg_save = [getreg('"'), getregtype('"')]
+        let reg_save = ['"', getreg('"'), getregtype('"')]
     endif
 
     " `winline()` returns the position of the current line from the top line of
@@ -581,7 +581,7 @@ fu! search#wrap_star(seq) abort "{{{1
 
     " restore unnamed register if we've altered it
     if exists('reg_save')
-        call timer_start(0, { -> setreg('"', reg_save[0], reg_save[1])})
+        call timer_start(0, { -> call('setreg', reg_save)})
     endif
 
     " Why     `\<plug>(ms_slash)\<plug>(ms_up)\<plug>(ms_cr)…`?{{{
