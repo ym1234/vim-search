@@ -362,7 +362,7 @@ fu! s:tick(_) abort dict "{{{1
     if !self.delete() && &hlsearch && active
         "                                  1 list describing 1 “position”;              ┐
         "                                 `matchaddpos()` can accept up to 8 positions; │
-        "                                  a position can match:                        │
+        "                                  each position can match:                     │
         "                                                                               │
         "                                      • a whole line                           │
         "                                      • a part of a line                       │
@@ -425,7 +425,7 @@ endfu
 "     https://github.com/LucHermitte/lh-vim-lib/blob/master/doc/OO.md
 "
 " Instead, we give it a proper name, and at the end of the script, we assign its
-" funref to `s:blink.tick`.
+" funcref to `s:blink.tick`.
 "
 " Same remark for `s:delete()`. Don't make it anonymous.
 "}}}
