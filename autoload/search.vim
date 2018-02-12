@@ -446,7 +446,7 @@ fu! search#view() abort "{{{1
 " make a nice view, by opening folds if any, and by restoring the view if
 " it changed but we wanted to stay where we were (happens with `*` and friends)
 
-    let seq = foldclosed('.') != -1 ? 'zMzv' : ''
+    let seq = foldclosed('.') !=# -1 ? 'zMzv' : ''
 
     " What are `s:winline` and `s:windiff`? {{{
     "
