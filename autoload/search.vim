@@ -431,7 +431,7 @@ endfu
 "}}}
 
 fu! search#toggle_hls(action) abort "{{{1
-    if a:action ==# 'save'
+    if a:action is# 'save'
         let s:hls_on = &hls
         set hls
     else
@@ -527,9 +527,9 @@ fu! search#wrap_n(is_fwd) abort "{{{1
     "
     " To prevent being stuck in an endless expansion, use non-recursive versions
     " of `n` and `N`.
-    let seq = (seq ==# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
+    let seq = (seq is# 'n' ? "\<plug>(ms_n)" : "\<plug>(ms_N)")
 
-    call timer_start(0, {-> v:errmsg[:4] ==# 'E486:' ? search#nohls() : '' })
+    call timer_start(0, {-> v:errmsg[:4] is# 'E486:' ? search#nohls() : '' })
 
     return seq."\<plug>(ms_custom)"
 
