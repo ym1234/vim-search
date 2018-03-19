@@ -165,8 +165,8 @@ endfu
 " matches_count {{{1
 
 " FIXME:
-" We call `matches_in_range()` which executes `s///gen` to count the number of
-" matches. It alters the last substitute string (~). To preserve it, inside
+" We call `matches_in_range()`  which executes `s///gen` to count  the number of
+" matches. It mutates  the last  substitute string (~).  To preserve  it, inside
 " `matches_count()`, we could add just after `winsaveview()`:
 "
 "     let old_rep = matchstr(getline(search('~', 'cn')), '~')
@@ -177,8 +177,8 @@ endfu
 "         call execute('s//'.old_rep.'/en')
 "     endif
 "
-" But it would work only if the last substitute string is present in the
-" current buffer. Besides, it also alters the last flags.
+" But it would work only if the last substitute string is present in the current
+" buffer. Besides, it also mutates the last flags.
 "
 " The perfect solution would be to execute `s///gen` without Vim logging
 " anything.
@@ -579,7 +579,7 @@ fu! search#wrap_star(seq) abort "{{{1
     \                            + execute('let s:after_slash = 1')
     \                      :       '' })
 
-    " restore unnamed register if we've altered it
+    " restore unnamed register if we've made it mutate
     if exists('reg_save')
         call timer_start(0, { -> call('setreg', reg_save)})
     endif
