@@ -122,7 +122,7 @@ fu! s:matches_above()
     " it probably also prevents the range `1,.-1` = `1,0` from prompting us with:
     "
     "     Backwards range given, OK to swap (y/n)?
-    if line('.') == 1 | return 0 | endif
+    if line('.') ==# 1 | return 0 | endif
 
     " this function is called only if `b:changedtick` hasn't changed, so
     " even though the position of the cursor may have changed, `total` can't
@@ -138,13 +138,13 @@ fu! s:matches_above()
     let to_bottom = line('$') - line
     let min_dist  = min([ to_top, to_old, to_bottom ])
 
-    if min_dist == to_top
+    if min_dist ==# to_top
         return s:matches_in_range('1,.-1')
 
-    elseif min_dist == to_bottom
+    elseif min_dist ==# to_bottom
         return total - s:matches_in_range('.,$')
 
-    " otherwise, min_dist == to_old, we just need to check relative line order
+    " otherwise, min_dist ==# to_old, we just need to check relative line order
     elseif old_line < line
         return old_before + s:matches_in_range(old_line.',.-1')
         "                   │
@@ -157,7 +157,7 @@ fu! s:matches_above()
         "                   └─ number of matches between current position and
         "                   above last one
 
-    else " old_line == line
+    else " old_line ==# line
         return old_before
     endif
 endfu
@@ -217,7 +217,7 @@ fu! s:matches_count() abort
         let total  = b:ms_cache[-1]
     else
         " if the cache can't be used, recompute
-        let before = line('.') == 1 ? 0 : s:matches_in_range('1,.-1')
+        let before = line('.') ==# 1 ? 0 : s:matches_in_range('1,.-1')
         let total  = before + s:matches_in_range('.,$')
     endif
 
