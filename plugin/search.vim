@@ -66,10 +66,10 @@ augroup my_hls_after_slash
     " Restore the state of 'hls', then invoke `after_slash()`.
     " And if the search has just failed, invoke `nohls()` to disable 'hls'.
     au CmdlineLeave /,\? call search#toggle_hls('restore')
-                      \| if getcmdline() isnot# '' && search#after_slash_status() ==# 1
-                      \|     call search#after_slash()
-                      \|     call timer_start(0, {-> v:errmsg[:4] is# 'E486:' ? search#nohls() : ''})
-                      \| endif
+                     \ | if getcmdline() isnot# '' && search#after_slash_status() ==# 1
+                     \ |     call search#after_slash()
+                     \ |     call timer_start(0, {-> v:errmsg[:4] is# 'E486:' ? search#nohls() : ''})
+                     \ | endif
 
     " Why `search#after_slash_status()`?{{{
     "
@@ -135,8 +135,8 @@ nno  <plug>(ms_prev)    <c-o>
 augroup ms_cmdwin
   au!
   au CmdWinEnter * if getcmdwintype() =~ '[/?]'
-                \|     nmap  <buffer><nowait>  <cr>  <cr><plug>(ms_index)
-                \| endif
+               \ |     nmap  <buffer><nowait>  <cr>  <cr><plug>(ms_index)
+               \ | endif
 augroup END
 
 " I don't think `<silent>` is needed here, but we use it to stay consistent,
