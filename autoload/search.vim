@@ -33,8 +33,9 @@ fu! search#blink() abort "{{{1
     " `delay` in the dictionary `s:blink`
     let [ s:blink.ticks, s:blink.delay ] = [ 4, 50 ]
 
-    call s:blink.delete()
-    call s:blink.tick(0)
+	" Don't blink
+    " call s:blink.delete()
+    " call s:blink.tick(0)
     return ''
 endfu
 
