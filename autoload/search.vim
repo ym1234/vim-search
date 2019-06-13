@@ -513,7 +513,8 @@ fu! search#wrap_n(is_fwd) abort "{{{1
     " We want `n` and `N` to move consistently no matter the direction of the
     " search `/`, or `?`.
     " toggle the value of `n`, `N` if necessary
-    let seq = (a:is_fwd ? 'Nn' : 'nN')[v:searchforward]
+    " let seq = (a:is_fwd ? 'Nn' : 'nN')[v:searchforward]
+    let seq = (a:is_fwd ? 'n' : 'N')
 
     " If we change the value of `seq` (`n` to `N` or `N` to `n`), when we perform
     " a backward search we have the error:
